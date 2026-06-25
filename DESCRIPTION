@@ -30,3 +30,5 @@ Suggests:
     scales,
     tidyr,
     worrms
+URL: https://github.com/maxlindmark/stomachr
+BugReports: https://github.com/maxlindmark/stomachr/issues
