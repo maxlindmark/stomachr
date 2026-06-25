@@ -1,0 +1,32 @@
+Package: stomachr
+Title: Download and Clean ICES Stomach Content Data
+Version: 0.0.0.9000
+Authors@R:
+    person("Max", "Lindmark", email = "max.lindmark@slu.se",
+           role = c("aut", "cre"))
+Description: A tidy pipeline for downloading and cleaning ICES stomach content
+    data from the four-table relational schema used by the ICES stomach content
+    database (stomachdata.ices.dk). Produces a single flat tibble suitable for
+    individual-level diet analysis.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+VignetteBuilder: knitr
+Imports:
+    cli,
+    dplyr,
+    janitor,
+    mapplots,
+    purrr,
+    readr,
+    tibble
+Suggests:
+    forcats,
+    ggplot2,
+    knitr,
+    rfishbase,
+    rmarkdown,
+    scales,
+    tidyr,
+    worrms
