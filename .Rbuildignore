@@ -5,3 +5,8 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^data-raw/.*\.pdf$
+^data-raw/.*\.rds$
+^inst/Presentation
+^CLAUDE\.md$
+^test\.R$

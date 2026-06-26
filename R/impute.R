@@ -242,9 +242,9 @@ impute_size <- function(dat,
     "universal (a=0.01, b=3)"
   )
 
-  B <- "├── "
-  L <- "└── "
-  V <- "│   "
+  B <- "|-- "
+  L <- "+-- "
+  V <- "|   "
 
   fix_last <- function(lines) {
     if (length(lines) > 0) lines[length(lines)] <- sub(B, L, lines[length(lines)], fixed = TRUE)
