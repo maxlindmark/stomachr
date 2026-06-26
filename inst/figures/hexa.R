@@ -19,7 +19,7 @@ image_write(fish, paste0(dir, "fish_mako.png"))
 sticker(
   paste0(dir, "fish_mako.png"),
   package  = "stomachr",
-  p_size   = 60,
+  p_size   = 56,
   p_y      = 1.4,
   p_family = "lato",
   #p_fontface = "italic",
