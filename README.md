@@ -108,11 +108,6 @@ dat <- join_stomach_data("data/raw") |>
   drop_flagged()
 ```
 
-### Map
-
-```r
-plot_map(dat)
-```
 
 ## Vignette
 
