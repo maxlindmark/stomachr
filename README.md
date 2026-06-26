@@ -11,7 +11,7 @@ stomachr is a package that downloads [ICES stomach content data](https://stomach
 
 The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by [tidylog](https://github.com/elbersb/tidylog), it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.
 
-The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more!
+The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! [See here for a walkthrough!](https://maxlindmark.github.io/stomachr/)
 
 ## Installation
 
