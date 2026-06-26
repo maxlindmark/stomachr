@@ -43,8 +43,14 @@ plot_map <- function(dat,
     ggplot2::scale_color_viridis_d()
   }
 
+  world <- ggplot2::map_data("world")
+
   ggplot2::ggplot() +
-    ggplot2::borders("world", fill = "grey80", colour = "grey60", linewidth = 0.2) +
+    ggplot2::geom_polygon(
+      data = world,
+      ggplot2::aes(x = .data[["long"]], y = .data[["lat"]], group = .data[["group"]]),
+      fill = "grey80", colour = "grey60", linewidth = 0.2
+    ) +
     ggplot2::geom_point(
       data = plot_dat,
       ggplot2::aes(
