@@ -55,6 +55,7 @@ final <- image_composite(sticker_img, db,
                          offset   = paste0("+", offset_x, "+", offset_y))
 
 final <- image_trim(final)
+final <- image_transparent(final, "white", fuzz = 3)  # make white corners transparent
 image_write(final, paste0(dir, "stomachr.png"))
 file.copy(paste0(dir, "stomachr.png"), "man/figures/logo.png", overwrite = TRUE)
 

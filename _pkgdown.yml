@@ -4,13 +4,7 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles, news]
-  components:
-    articles:
-      text: Articles
-      menu:
-      - text: Getting started
-        href: articles/stomachr.html
+    left: [intro, reference, news]
 
 reference:
   - title: Download
