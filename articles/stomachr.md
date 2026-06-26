@@ -314,7 +314,7 @@ ggplot(plot_dat, aes(frac, predator_scientific_name, fill = prey_group)) +
     hjust = 0, inherit.aes = FALSE, size = 3
   ) +
   scale_fill_brewer(palette = "Spectral") +
-  scale_x_continuous(limits = c(0, 1.12), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 1.25), expand = c(0, 0)) +
   coord_cartesian(expand = FALSE, clip = "off") +
   labs(x = "Diet proportion (by weight)", y = NULL, fill = "Prey class")
 ```
