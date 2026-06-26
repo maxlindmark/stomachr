@@ -23,5 +23,6 @@ rows that fail any of the following checks:
 \item \code{stomach_weight}: total stomach content weight exceeds predator weight
 \item \code{pred_length}: predator length <= 0 or >= 999 (sentinel value)
 \item \code{count_censored}: count was the 9999 sentinel (unknown multiplicity)
+\item \code{coord_outlier}: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45-72, lon -20 to 30)
 }
 }

@@ -49,7 +49,7 @@ To restrict to specific years or countries:
 download_stomach(path, year = 2000:2010, country = c("DK", "NO", "SE"))
 ```
 
-In this vignette we run the pipeline on the raw CSVs for the North Sea (2015–2024) bundled with the package
+In this vignette we run the pipeline on the raw CSVs for the North Sea (2015-2024) bundled with the package
 in `inst/extdata/`, as if you had downloaded them yourself.
 
 ```{r load-extdata, eval = TRUE}
@@ -111,7 +111,7 @@ means, and estimates missing predator weight from length. Also creates the
 final `predator_weight` column (observed weight if available, otherwise
 estimated from length). L/W parameters are looked up from the internal table
 (FishBase for fish, Robinson 2010 for invertebrates) with hierarchical
-fallback: species → family → order → class → phylum → universal (a = 0.01, b = 3).
+fallback: species -> family -> order -> class -> phylum -> universal (a = 0.01, b = 3).
 
 - `which`: impute `"prey"`, `"pred"`, or `"both"` (default)
 - `method`: `"lw_params"` (default) uses the bundled L/W table; `"observations"` uses mean sizes from other records of the same species
@@ -252,4 +252,4 @@ dat |>
 
 Froese, R. and D. Pauly (eds.) FishBase. World Wide Web electronic publication. www.fishbase.org.
 
-Robinson, R.A. et al. (2010). Trophic relationships of marine benthic invertebrates in the North Sea. *Journal of the Marine Biological Association of the United Kingdom*, 90(7), 1375–1388.
+Robinson, R.A. et al. (2010). Trophic relationships of marine benthic invertebrates in the North Sea. *Journal of the Marine Biological Association of the United Kingdom*, 90(7), 1375-1388.

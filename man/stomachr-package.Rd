@@ -12,6 +12,7 @@ A tidy pipeline for downloading and cleaning ICES stomach content data from the 
 Useful links:
 \itemize{
   \item \url{https://github.com/maxlindmark/stomachr}
+  \item \url{https://maxlindmark.github.io/stomachr/}
   \item Report bugs at \url{https://github.com/maxlindmark/stomachr/issues}
 }
 

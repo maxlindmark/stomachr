@@ -1,8 +1,7 @@
 #' Impute missing prey and predator sizes
 #'
 #' Estimates missing prey weight and/or length via L/W parameters or observed
-#' means, and estimates missing predator weight from length. Calls the internal
-#' [add_lw()] helper to attach L/W parameters before imputation.
+#' means, and estimates missing predator weight from length.
 #'
 #' @param dat Tibble from [add_taxonomy()].
 #' @param which One of `"both"` (default), `"prey"`, or `"pred"`.

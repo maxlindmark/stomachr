@@ -8,7 +8,7 @@
 #' - `stomach_weight`: total stomach content weight exceeds predator weight
 #' - `pred_length`: predator length <= 0 or >= 999 (sentinel value)
 #' - `count_censored`: count was the 9999 sentinel (unknown multiplicity)
-#' - `coord_outlier`: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45–72, lon -20–30)
+#' - `coord_outlier`: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45-72, lon -20 to 30)
 #'
 #' @param dat Tibble from [trim_data()].
 #'

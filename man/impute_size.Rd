@@ -32,6 +32,5 @@ dropped.
 }
 \description{
 Estimates missing prey weight and/or length via L/W parameters or observed
-means, and estimates missing predator weight from length. Calls the internal
-\code{\link[=add_lw]{add_lw()}} helper to attach L/W parameters before imputation.
+means, and estimates missing predator weight from length.
 }
