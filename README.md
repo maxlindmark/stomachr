@@ -1,4 +1,4 @@
-# stomachr <img src="inst/figures/stomachr.png" align="right" height="139"/>
+# stomachr <img src="man/figures/logo.png" align="right" height="139"/>
 
 > Downloading and cleaning ICES stomach content data
 
