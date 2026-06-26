@@ -1,9 +1,6 @@
 #' Plot sampling locations on a map
 #'
-#' Plots haul locations as points on a Lambert Conformal Conic projection
-#' centred on the North Sea.
-#'
-#' Requires the \pkg{rnaturalearth} package for the background land layer.
+#' Plots haul locations as points on a map of the North Sea.
 #'
 #' @param dat Tibble from [trim_data()] or later. Must contain columns `lat`,
 #'   `lon`, and `tbl_predator_information_id`.
@@ -23,17 +20,6 @@ plot_map <- function(dat,
                      facet = "predator_scientific_name",
                      species = NULL,
                      ncol = 4) {
-  if (!requireNamespace("rnaturalearth", quietly = TRUE)) {
-    cli::cli_abort(c(
-      "{.pkg rnaturalearth} is required for {.fn plot_map}.",
-      "i" = "Install it with {.code install.packages('rnaturalearth')}."
-    ))
-  }
-
-  crs_lcc <- sf::st_crs(
-    "+proj=lcc +lat_1=48 +lat_2=62 +lat_0=55 +lon_0=10 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-  )
-
   pred_only <- dat |>
     dplyr::distinct(tbl_predator_information_id, .keep_all = TRUE) |>
     dplyr::filter(!is.na(lat), !is.na(lon))
@@ -47,18 +33,7 @@ plot_map <- function(dat,
 
   pred_only <- dplyr::filter(pred_only, predator_scientific_name %in% species)
 
-  coords <- pred_only |>
-    sf::st_as_sf(coords = c("lon", "lat"), crs = 4326) |>
-    sf::st_transform(crs_lcc) |>
-    sf::st_coordinates()
-
-  pred_only$X <- coords[, 1] / 1000
-  pred_only$Y <- coords[, 2] / 1000
-
-  world_lcc <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf") |>
-    sf::st_transform(crs_lcc)
-
-  group_cols <- unique(c("lon", "lat", "X", "Y", color, facet))
+  group_cols <- unique(c("lon", "lat", color, facet))
   plot_dat <- pred_only |>
     dplyr::count(dplyr::across(dplyr::all_of(group_cols)), name = "n_stomachs")
 
@@ -69,21 +44,20 @@ plot_map <- function(dat,
   }
 
   ggplot2::ggplot() +
-    ggplot2::geom_sf(data = world_lcc, fill = "grey80", color = "grey60", linewidth = 0.2) +
-    ggplot2::coord_sf(
-      xlim = range(pred_only$X) * 1000,
-      ylim = range(pred_only$Y) * 1000,
-      crs = crs_lcc,
-      expand = TRUE
-    ) +
+    ggplot2::borders("world", fill = "grey80", colour = "grey60", linewidth = 0.2) +
     ggplot2::geom_point(
       data = plot_dat,
       ggplot2::aes(
-        x = X * 1000, y = Y * 1000,
+        x = lon, y = lat,
         size = n_stomachs,
         color = .data[[color]]
       ),
       alpha = 0.7
+    ) +
+    ggplot2::coord_quickmap(
+      xlim = range(pred_only$lon),
+      ylim = range(pred_only$lat),
+      expand = TRUE
     ) +
     ggplot2::facet_wrap(facet, ncol = ncol) +
     ggplot2::scale_size_continuous(range = c(0.5, 4)) +

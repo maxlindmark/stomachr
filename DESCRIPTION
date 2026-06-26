@@ -27,13 +27,12 @@ Imports:
 Suggests:
     forcats,
     knitr,
+    maps,
     rfishbase,
     rmarkdown,
-    rnaturalearth,
     scales,
     tidyr,
     worrms
-Config/Needs/website: rnaturalearthdata
 URL: https://github.com/maxlindmark/stomachr, https://maxlindmark.github.io/stomachr/
 BugReports: https://github.com/maxlindmark/stomachr/issues
 Depends: 
