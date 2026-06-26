@@ -42,7 +42,7 @@ download_stomach(path, year = 2000:2010, country = c("DK", "NO", "SE"))
 ```
 
 In this vignette we run the pipeline on the raw CSVs for the North Sea
-(2015-2024) bundled with the package in `inst/extdata/`, as if you had
+(2020-2024) bundled with the package in `inst/extdata/`, as if you had
 downloaded them yourself.
 
 ``` r
@@ -178,7 +178,7 @@ dat <- trim_data(dat)
 #>   ind_weight_est
 ```
 
-### Steps 7-8: `sense_check()` and `drop_flagged()`
+### Steps 7–8: `sense_check()` and `drop_flagged()`
 
 [`sense_check()`](https://maxlindmark.github.io/stomachr/reference/sense_check.md)
 adds a `sense_flag` column marking implausible records.
@@ -201,6 +201,9 @@ dat <- drop_flagged(dat)
 
 ## Example analyses
 
+The next sections show some basic plots for the most common predators in
+the build in North Sea data (2020–2024).
+
 ``` r
 
 library(ggplot2)
@@ -219,7 +222,21 @@ top <- dat |>
   pull(predator_scientific_name)
 ```
 
-### Proportion of empty, food, and unidentified stomachs by year
+### Sampling locations
+
+``` r
+
+plot_map(dat, color = "year")
+```
+
+![](stomachr_files/figure-html/plot-map-1.png)
+
+### Proportion of empty, food, and unidentified stomachs by year and predators
+
+For this plot, we use
+[`distinct()`](https://dplyr.tidyverse.org/reference/distinct.html) to
+get one row per predator, the count the frequency of stomach-statuses
+across years and predator species:
 
 ``` r
 
@@ -230,29 +247,37 @@ dat |>
   mutate(frac = n / sum(n), .by = c(year, predator_scientific_name)) |>
   ggplot(aes(year, frac, fill = stomach_status)) +
   geom_col(alpha = 0.9) +
-  scale_x_continuous(breaks = \(x) pretty(x, n = 6)) +
-  facet_wrap(~predator_scientific_name, scales = "free_x") +
+  scale_x_continuous(breaks = \(x) pretty(x, n = 3)) +
+  facet_wrap(~predator_scientific_name, ncol = 3) +
   scale_y_continuous(labels = percent) +
   scale_fill_brewer(palette = "Set1") +
-  labs(x = "Year", y = "Fraction of stomachs", fill = "Stomach status")
+  theme(legend.position = "bottom") +
+  labs(x = "Year", y = "Percent", fill = "Stomach status")
 ```
 
 ![](stomachr_files/figure-html/plot-status-1.png)
 
 ### Predator-prey mass ratio (PPMR)
 
+To plot predator-prey mass ratios, we can use the final dataset, but we
+need to `uncount(count)`, such that one row is one individual prey!
+
 ``` r
 
 dat |>
   filter(predator_scientific_name %in% top, stomach_status == "food") |>
   drop_na(predator_weight, prey_weight_ind) |>
+  drop_na(prey_class) |> 
   uncount(count) |>
-  ggplot(aes(predator_weight, prey_weight_ind)) +
-  facet_wrap(~predator_scientific_name, scales = "free") +
-  geom_point(alpha = 0.4, color = "grey30") +
+  ggplot(aes(predator_weight, prey_weight_ind, color = prey_class)) +
+  facet_wrap(~predator_scientific_name, scales = "free", ncol = 3) +
+  geom_point(alpha = 0.6) +
+  scale_color_viridis_d() +
   scale_x_log10() +
   scale_y_log10() +
-  labs(x = "Predator weight (g)", y = "Prey weight (g)")
+  guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
+  labs(x = "Predator weight (g)", y = "Prey weight (g)", color = "Prey class") +
+  theme(legend.position = "bottom")
 ```
 
 ![](stomachr_files/figure-html/plot-ppmr-1.png)
@@ -268,7 +293,7 @@ plot_dat <- dat |>
     !is.na(prey_weight_all_ind)
   ) |>
   mutate(
-    prey_group = fct_lump_n(prey_class, n = n, w = prey_weight_all_ind, other_level = "Other"),
+    prey_group = fct_lump_n(coalesce(prey_class, "Other"), n = 5, w = prey_weight_all_ind, other_level = "Other"),
     n_pred = n_distinct(tbl_predator_information_id), .by = predator_scientific_name
   ) |>
   summarise(
@@ -285,12 +310,10 @@ ggplot(plot_dat, aes(frac, predator_scientific_name, fill = prey_group)) +
     aes(x = 1.01, y = predator_scientific_name, label = n_pred),
     hjust = 0, inherit.aes = FALSE, size = 3
   ) +
-  scale_fill_brewer(palette = "Spectral", na.value = "grey80") +
-  scale_x_continuous(limits = c(0, 1.15), expand = c(0, 0)) +
+  scale_fill_brewer(palette = "Spectral") +
+  scale_x_continuous(limits = c(0, 1.08), expand = c(0, 0)) +
   coord_cartesian(expand = FALSE, clip = "off") +
   labs(x = "Diet proportion (by weight)", y = NULL, fill = "Prey class")
-#> Warning in RColorBrewer::brewer.pal(n, pal): n too large, allowed maximum for palette Spectral is 11
-#> Returning the palette you asked for with that many colors
 ```
 
 ![](stomachr_files/figure-html/plot-diet-class-1.png)

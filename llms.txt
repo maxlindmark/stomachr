@@ -114,8 +114,8 @@ to something ready for analysing, are these:
 | `worms_lookup` | WoRMS taxonomy for every AphiaID in the ICES database |
 | `lw_params` | Length-weight parameters with taxonomic fallback (FishBase for fish; Robinson 2010 for invertebrates) |
 
-The four raw North Sea CSV files are bundled in `inst/extdata/` and used
-in
+The four raw North Sea CSV files (2020-2024) are bundled in
+`inst/extdata/` and used in
 [`vignette("stomachr")`](https://maxlindmark.github.io/stomachr/articles/stomachr.md)
 to demonstrate the full pipeline.
 
