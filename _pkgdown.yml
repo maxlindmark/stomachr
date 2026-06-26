@@ -1,0 +1,28 @@
+url: https://maxlindmark.github.io/stomachr/
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+
+reference:
+  - title: Download
+    contents:
+      - download_stomach
+  - title: Cleaning pipeline
+    contents:
+      - join_stomach_data
+      - drop_invalid
+      - add_taxonomy
+      - impute_size
+      - trim_data
+      - sense_check
+      - drop_flagged
+  - title: Visualisation
+    contents:
+      - plot_map
+  - title: Bundled data
+    contents:
+      - worms_lookup
+      - lw_params

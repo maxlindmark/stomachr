@@ -8,6 +8,7 @@
 #' - `stomach_weight`: total stomach content weight exceeds predator weight
 #' - `pred_length`: predator length <= 0 or >= 999 (sentinel value)
 #' - `count_censored`: count was the 9999 sentinel (unknown multiplicity)
+#' - `coord_outlier`: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45–72, lon -20–30)
 #'
 #' @param dat Tibble from [trim_data()].
 #'
@@ -32,7 +33,9 @@ sense_check <- function(dat) {
       .f_prey_weight = !is.na(prey_weight_ind) & !is.na(predator_weight) & prey_weight_ind > predator_weight,
       .f_stomach_wgt = tbl_predator_information_id %in% stomach_over,
       .f_pred_length = !is.na(pred_length) & (pred_length <= 0 | pred_length >= 999),
-      .f_count_cens = count_censored,
+      .f_count_cens  = count_censored,
+      .f_coord       = !is.na(lat) & !is.na(lon) &
+                         (lat < 45 | lat > 72 | lon < -20 | lon > 30),
       sense_flag = dplyr::case_when(
         .f_prey_length & .f_prey_weight & .f_stomach_wgt & .f_pred_length ~ "prey_length|prey_weight|stomach_weight|pred_length",
         .f_prey_length & .f_prey_weight & .f_stomach_wgt ~ "prey_length|prey_weight|stomach_weight",
@@ -49,11 +52,12 @@ sense_check <- function(dat) {
         .f_prey_weight ~ "prey_weight",
         .f_stomach_wgt ~ "stomach_weight",
         .f_pred_length ~ "pred_length",
-        .f_count_cens ~ "count_censored",
+        .f_count_cens  ~ "count_censored",
+        .f_coord       ~ "coord_outlier",
         TRUE ~ NA_character_
       )
     ) |>
-    dplyr::select(-.f_prey_length, -.f_prey_weight, -.f_stomach_wgt, -.f_pred_length, -.f_count_cens)
+    dplyr::select(-.f_prey_length, -.f_prey_weight, -.f_stomach_wgt, -.f_pred_length, -.f_count_cens, -.f_coord)
 
   report_check <- function(flag_key, label) {
     rows <- dplyr::filter(dat, grepl(flag_key, sense_flag, fixed = TRUE))
@@ -80,6 +84,7 @@ sense_check <- function(dat) {
   report_check("stomach_weight", "total stomach content heavier than predator")
   report_check("pred_length", "predator length implausible (<=0 or >=999, likely sentinel value)")
   report_check("count_censored", "count was 9999 sentinel (unknown multiplicity)")
+  report_check("coord_outlier", "coordinates outside region (lat 45-72, lon -20 to 30)")
   cli::cli_inform(c(
     "i" = "{n_flagged} row{?s} flagged ({pct})",
     "i" = "Use {.fn drop_flagged} to remove, or inspect {.field tbl_predator_information_id} in raw data"

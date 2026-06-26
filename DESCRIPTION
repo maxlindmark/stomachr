@@ -33,7 +33,7 @@ Suggests:
     scales,
     tidyr,
     worrms
-URL: https://github.com/maxlindmark/stomachr
+URL: https://github.com/maxlindmark/stomachr, https://maxlindmark.github.io/stomachr/
 BugReports: https://github.com/maxlindmark/stomachr/issues
 Depends: 
     R (>= 2.10)
