@@ -92,7 +92,7 @@ The key functions of this package, which takes you from the four raw csv to some
 | `worms_lookup` | WoRMS taxonomy for every AphiaID in the ICES database |
 | `lw_params` | Length-weight parameters with taxonomic fallback (FishBase for fish; Robinson 2010 for invertebrates) |
 
-The four raw North Sea CSV files are bundled in `inst/extdata/` and used in `vignette("stomachr")` to demonstrate the full pipeline.
+The four raw North Sea CSV files (2020-2024) are bundled in `inst/extdata/` and used in `vignette("stomachr")` to demonstrate the full pipeline.
 
 ### Clean
 

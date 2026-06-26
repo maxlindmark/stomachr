@@ -1,4 +1,4 @@
-# Saves North Sea raw CSVs (2015-2024, Greater North Sea coordinates) to
+# Saves North Sea raw CSVs (2020-2024, Greater North Sea coordinates) to
 # inst/extdata/ so the vignette can run the pipeline on them with eval=TRUE.
 #
 # Run once with: source("data-raw/build_example_data.R")
@@ -7,7 +7,7 @@ pkgload::load_all()
 library(dplyr)
 
 tmp <- tempfile()
-download_stomach(path = tmp, year = 2015:2024)
+download_stomach(path = tmp, year = 2020:2024)
 
 fi   <- readr::read_csv(file.path(tmp, "File_information.csv"),    show_col_types = FALSE)
 hi   <- readr::read_csv(file.path(tmp, "HaulInformation.csv"),     show_col_types = FALSE)
@@ -32,5 +32,5 @@ readr::write_csv(pred_ns, "inst/extdata/PredatorInformation.csv")
 readr::write_csv(prey_ns, "inst/extdata/PreyInformation.csv")
 
 cli::cli_inform(c(
-  "v" = "inst/extdata/ written ({nrow(pred_ns)} predators, Greater North Sea 2015-2024)"
+  "v" = "inst/extdata/ written ({nrow(pred_ns)} predators, Greater North Sea 2020-2024)"
 ))
