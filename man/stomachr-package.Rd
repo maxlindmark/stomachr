@@ -6,6 +6,8 @@
 \alias{stomachr-package}
 \title{stomachr: Download and Clean ICES Stomach Content Data}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 A tidy pipeline for downloading and cleaning ICES stomach content data from the four-table relational schema used by the ICES stomach content database (stomachdata.ices.dk). Produces a single flat tibble suitable for individual-level diet analysis.
 }
 \seealso{
