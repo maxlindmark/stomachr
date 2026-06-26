@@ -131,6 +131,9 @@ up from the internal table (FishBase for fish, Robinson 2010 for
 invertebrates) with hierarchical fallback: species -\> family -\> order
 -\> class -\> phylum -\> universal (a = 0.01, b = 3).
 
+Future versions of this package could fit mixed models instead and
+impute weights in a more clever way, accounting also for size, etc!
+
 - `which`: impute `"prey"`, `"pred"`, or `"both"` (default)
 - `method`: `"lw_params"` (default) uses the bundled L/W table;
   `"observations"` uses mean sizes from other records of the same
@@ -311,7 +314,7 @@ ggplot(plot_dat, aes(frac, predator_scientific_name, fill = prey_group)) +
     hjust = 0, inherit.aes = FALSE, size = 3
   ) +
   scale_fill_brewer(palette = "Spectral") +
-  scale_x_continuous(limits = c(0, 1.08), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 1.12), expand = c(0, 0)) +
   coord_cartesian(expand = FALSE, clip = "off") +
   labs(x = "Diet proportion (by weight)", y = NULL, fill = "Prey class")
 ```
