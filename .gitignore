@@ -5,3 +5,10 @@ CLAUDE.md
 .httr-oauth
 .DS_Store
 .quarto
+test.R
+inst/
+!inst/figures/
+!inst/figures/**
+!inst/extdata/
+!inst/extdata/**
+!inst/CITATION

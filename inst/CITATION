@@ -1,0 +1,8 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "stomachr: Download and Clean ICES Stomach Content Data",
+  author   = person("Max", "Lindmark"),
+  year     = format(Sys.Date(), "%Y"),
+  url      = "https://github.com/maxlindmark/stomachr",
+  note     = "R package"
+)

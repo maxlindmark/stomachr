@@ -1,0 +1,255 @@
+---
+title: "Getting started with stomachr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with stomachr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+`stomachr` provides a tidy pipeline for downloading, reading, cleaning, and
+preparing ICES stomach content data for various diet analysis. The
+data come from the [ICES stomach content database](https://stomachdata.ices.dk)
+and follow the new four-table exchange format, joined by `tblUploadID`,
+`tblHaulID`, and `tblPredatorInformationID`.
+
+## Installation
+
+```{r install}
+# install.packages("remotes")
+remotes::install_github("maxlindmark/stomachr")
+```
+
+## Workflow
+
+### Step 1: Download
+
+You can download the data from the portal and go to Step 2. Or you can call
+`download_stomach()`, which downloads data from the ICES API and writes the four CSVs
+to a local directory (which you control via `path`). Ecoregion filtering is not
+supported by the API (nor in the actual data it seems!), but you can filter geographically after 
+joining using `lat`/`lon` or `ices_rectangle`.
+
+```{r download}
+path <- "data/raw"
+download_stomach(path)
+```
+
+To restrict to specific years or countries:
+
+```{r download-subset}
+download_stomach(path, year = 2000:2010, country = c("DK", "NO", "SE"))
+```
+
+In this vignette we run the pipeline on the raw CSVs for the North Sea (2015–2024) bundled with the package
+in `inst/extdata/`, as if you had downloaded them yourself.
+
+```{r load-extdata, eval = TRUE}
+library(stomachr)
+path <- system.file("extdata", package = "stomachr")
+```
+
+### Step 2: `join_stomach_data()`
+
+The next step is to join the four CSVs. This means attaching haul and file metadata 
+to predators, classifying each stomach as `"food"`, `"empty"`, or `"unidentified"`, 
+deduplicates exact-duplicate prey rows (present in some national submissions),
+converts prey length from mm to cm, handles the count sentinel value (9999 = unknown
+multiplicity), and optionally imputes missing coordinates from ICES rectangle
+midpoints (defaults to yes).
+
+**Known country-specific unit issues** (currently requires manual correction
+before proceeding):
+
+- Belgium (`BE`): `pred_length` is in mm -- divide by 10
+- Denmark (`DK`): `ind_wgt` is in kg -- multiply by 1000
+
+```{r unit-fix, eval = TRUE}
+dat <- join_stomach_data(path)
+
+dat <- dat |>
+  dplyr::mutate(
+    pred_length = dplyr::if_else(country == "BE", pred_length / 10, pred_length),
+    ind_wgt     = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt)
+  )
+```
+
+### Step 3: `drop_invalid()`
+
+Removes predators with `regurgitated >= 1`. Stomach contents of regurgitated
+fish are techically not usable. The `na_regurgitated` argument controls
+whether `NA` values are treated as not regurgitated (`"keep"`, default) or
+regurgitated (`"drop"`).
+
+```{r drop, eval = TRUE}
+dat <- drop_invalid(dat, na_regurgitated = "keep")
+```
+
+### Step 4: `add_taxonomy()`
+
+Joins scientific names and higher taxonomy (class, order, family, phylum) for
+both predators and prey from the internal WoRMS lookup. Prey with
+`aphia_id_prey = NA` in non-empty stomachs are labelled `"Unknown"` so their
+weight is not silently lost.
+
+```{r taxonomy, eval = TRUE}
+dat <- add_taxonomy(dat)
+```
+
+### Step 5: `impute_size()`
+
+Estimates missing prey weight and/or length via L/W parameters or observed
+means, and estimates missing predator weight from length. Also creates the
+final `predator_weight` column (observed weight if available, otherwise
+estimated from length). L/W parameters are looked up from the internal table
+(FishBase for fish, Robinson 2010 for invertebrates) with hierarchical
+fallback: species → family → order → class → phylum → universal (a = 0.01, b = 3).
+
+- `which`: impute `"prey"`, `"pred"`, or `"both"` (default)
+- `method`: `"lw_params"` (default) uses the bundled L/W table; `"observations"` uses mean sizes from other records of the same species
+- `size`: impute `"weight"`, `"length"`, or `"both"` (default)
+- `fill_if_no_size`: if `TRUE` (default), prey with no recorded size borrow from other records of the same species before applying L/W
+
+```{r impute, eval = TRUE}
+dat <- impute_size(dat, which = "both", method = "lw_params", size = "both")
+```
+
+### Step 6: `trim_data()`
+
+Returns only the analysis-ready columns.
+
+```{r trim, eval = TRUE}
+dat <- trim_data(dat)
+```
+
+### Steps 7-8: `sense_check()` and `drop_flagged()`
+
+`sense_check()` adds a `sense_flag` column marking implausible records.
+`drop_flagged()` removes them. You can inspect flagged records before dropping
+by examining `tbl_predator_information_id` in the raw data.
+
+```{r check, eval = TRUE}
+dat <- sense_check(dat)
+dat <- drop_flagged(dat)
+```
+
+## Example analyses
+
+```{r setup-plots, eval = TRUE, message = FALSE, warning = FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(scales)
+
+theme_set(theme_light())
+n <- 10
+
+top <- dat |>
+  distinct(tbl_predator_information_id, .keep_all = TRUE) |>
+  count(predator_scientific_name, sort = TRUE) |>
+  slice_head(n = n) |>
+  pull(predator_scientific_name)
+```
+
+### Proportion of empty, food, and unidentified stomachs by year
+
+```{r plot-status, eval = TRUE}
+dat |>
+  filter(predator_scientific_name %in% top) |>
+  distinct(tbl_predator_information_id, .keep_all = TRUE) |>
+  count(year, predator_scientific_name, stomach_status) |>
+  mutate(frac = n / sum(n), .by = c(year, predator_scientific_name)) |>
+  ggplot(aes(year, frac, fill = stomach_status)) +
+  geom_col(alpha = 0.9) +
+  scale_x_continuous(breaks = \(x) pretty(x, n = 6)) +
+  facet_wrap(~predator_scientific_name, scales = "free_x") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Year", y = "Fraction of stomachs", fill = "Stomach status")
+```
+
+### Predator-prey mass ratio (PPMR)
+
+```{r plot-ppmr, eval = TRUE}
+dat |>
+  filter(predator_scientific_name %in% top, stomach_status == "food") |>
+  drop_na(predator_weight, prey_weight_ind) |>
+  uncount(count) |>
+  ggplot(aes(predator_weight, prey_weight_ind)) +
+  facet_wrap(~predator_scientific_name, scales = "free") +
+  geom_point(alpha = 0.4, color = "grey30") +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(x = "Predator weight (g)", y = "Prey weight (g)")
+```
+
+### Diet composition by prey class
+
+```{r plot-diet-class, eval = TRUE}
+plot_dat <- dat |>
+  filter(
+    predator_scientific_name %in% top,
+    stomach_status == "food",
+    !is.na(prey_weight_all_ind)
+  ) |>
+  mutate(
+    prey_group = fct_lump_n(prey_class, n = n, w = prey_weight_all_ind, other_level = "Other"),
+    n_pred = n_distinct(tbl_predator_information_id), .by = predator_scientific_name
+  ) |>
+  summarise(
+    total_weight = sum(prey_weight_all_ind),
+    n_pred = first(n_pred),
+    .by = c(predator_scientific_name, prey_group)
+  ) |>
+  mutate(frac = total_weight / sum(total_weight), .by = predator_scientific_name)
+
+ggplot(plot_dat, aes(frac, predator_scientific_name, fill = prey_group)) +
+  geom_col() +
+  geom_text(
+    data = distinct(plot_dat, predator_scientific_name, n_pred),
+    aes(x = 1.01, y = predator_scientific_name, label = n_pred),
+    hjust = 0, inherit.aes = FALSE, size = 3
+  ) +
+  scale_fill_brewer(palette = "Spectral", na.value = "grey80") +
+  scale_x_continuous(limits = c(0, 1.15), expand = c(0, 0)) +
+  coord_cartesian(expand = FALSE, clip = "off") +
+  labs(x = "Diet proportion (by weight)", y = NULL, fill = "Prey class")
+```
+
+### Cod diet over time by prey family
+
+```{r plot-cod, eval = TRUE}
+dat |>
+  filter(
+    predator_scientific_name == "Gadus morhua",
+    stomach_status == "food",
+    !is.na(prey_weight_all_ind)
+  ) |>
+  mutate(prey_group = fct_lump_n(prey_family, n = n, w = prey_weight_all_ind, other_level = "Other")) |>
+  summarise(total_weight = sum(prey_weight_all_ind), .by = c(year, prey_group)) |>
+  mutate(frac = total_weight / sum(total_weight), .by = year) |>
+  ggplot(aes(year, frac, fill = prey_group)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Spectral", na.value = "grey80") +
+  scale_x_continuous(breaks = \(x) pretty(x, n = 6)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(
+    x = "Year", y = "Diet proportion (by weight)", fill = "Prey family",
+    title = "Gadus morhua"
+  )
+```
+
+## References
+
+Froese, R. and D. Pauly (eds.) FishBase. World Wide Web electronic publication. www.fishbase.org.
+
+Robinson, R.A. et al. (2010). Trophic relationships of marine benthic invertebrates in the North Sea. *Journal of the Marine Biological Association of the United Kingdom*, 90(7), 1375–1388.

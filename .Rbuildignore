@@ -1,2 +1,4 @@
 ^stomachr\.Rproj$
 ^\.Rproj\.user$
+^\.claude$
+^\.github$

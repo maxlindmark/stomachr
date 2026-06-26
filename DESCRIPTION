@@ -16,19 +16,25 @@ VignetteBuilder: knitr
 Imports:
     cli,
     dplyr,
+    ggplot2,
     janitor,
     mapplots,
     purrr,
     readr,
-    tibble
+    sf,
+    tibble,
+    utils
 Suggests:
     forcats,
-    ggplot2,
     knitr,
     rfishbase,
     rmarkdown,
+    rnaturalearth,
     scales,
     tidyr,
     worrms
 URL: https://github.com/maxlindmark/stomachr
 BugReports: https://github.com/maxlindmark/stomachr/issues
+Depends: 
+    R (>= 2.10)
+LazyData: true
