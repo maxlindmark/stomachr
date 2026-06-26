@@ -55,7 +55,7 @@ plot_map <- function(dat,
   pred_only$X <- coords[, 1] / 1000
   pred_only$Y <- coords[, 2] / 1000
 
-  world_lcc <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf") |>
+  world_lcc <- rnaturalearth::ne_countries(scale = "small", returnclass = "sf") |>
     sf::st_transform(crs_lcc)
 
   group_cols <- unique(c("lon", "lat", "X", "Y", color, facet))

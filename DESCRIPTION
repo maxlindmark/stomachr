@@ -30,7 +30,6 @@ Suggests:
     rfishbase,
     rmarkdown,
     rnaturalearth,
-    rnaturalearthdata,
     scales,
     tidyr,
     worrms
