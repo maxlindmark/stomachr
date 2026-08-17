@@ -10,9 +10,10 @@ showtext_auto()
 dir <- "/Users/maxlindmark/Dropbox/max-work/R/stomachr/inst/figures/"
 
 # ── Colour scheme ─────────────────────────────────────────────────────────────
-fish_col   <- viridis::mako(1, begin = 1)
-border_col <- viridis::mako(1, begin = 1)
-fill_col   <- colorspace::darken(viridis::mako(1, begin = 0.62), amount = 0.35)
+fish_col  <- viridis::mako(1, begin = 1) # pale mint, used for fish/db/text
+bg_base   <- colorspace::darken(viridis::mako(1, begin = 0.62), amount = 0.15)
+fill_col  <- colorspace::lighten(bg_base, amount = 0.15) # lighter background
+border_col <- colorspace::darken(bg_base, amount = 0.2) # very dark border
 
 # Recolor + thicken fish
 fish <- image_read(paste0(dir, "fish.png"))
@@ -29,7 +30,7 @@ sticker(
   p_size   = 34,
   p_y      = 1.4,
   p_family = "lato",
-  p_color  = border_col,
+  p_color  = fish_col,
   s_x      = 1,
   s_y      = 0.8,
   s_width  = 0.7,
