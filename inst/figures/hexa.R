@@ -5,6 +5,7 @@ library(viridis)
 library(colorspace)
 
 font_add_google("Lato", "lato")
+font_add_google("Lato", "lato-black", regular.wt = 900)
 showtext_auto()
 
 dir <- "/Users/maxlindmark/Dropbox/max-work/R/stomachr/inst/figures/"
@@ -19,7 +20,7 @@ border_col <- colorspace::darken(bg_base, amount = 0.2) # very dark border
 fish <- image_read(paste0(dir, "fish.png"))
 fish <- image_convert(fish, "PNG")
 fish <- image_transparent(fish, "white", fuzz = 10)
-fish <- image_morphology(fish, "Dilate", "Diamond", iterations = 2) # thicken lines
+fish <- image_morphology(fish, "Erode", "Diamond", iterations = 5) # thicken lines
 fish <- image_colorize(fish, opacity = 90, color = fish_col)
 fish <- image_fx(fish, expression = "a*0.6", channel = "alpha") # fish alpha
 image_write(fish, paste0(dir, "fish_mako.png"))
@@ -27,9 +28,9 @@ image_write(fish, paste0(dir, "fish_mako.png"))
 sticker(
   paste0(dir, "fish_mako.png"),
   package  = "stomachr",
-  p_size   = 34,
+  p_size   = 52,
   p_y      = 1.4,
-  p_family = "lato",
+  p_family = "lato-black",
   p_color  = fish_col,
   s_x      = 1,
   s_y      = 0.8,
