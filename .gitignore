@@ -7,8 +7,6 @@ CLAUDE.md
 .quarto
 my-scripts/
 inst/
-!inst/figures/
-!inst/figures/**
 !inst/extdata/
 !inst/extdata/**
 !inst/CITATION
