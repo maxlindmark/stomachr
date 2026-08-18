@@ -9,4 +9,4 @@
 ^data-raw/.*\.rds$
 ^inst/Presentation
 ^CLAUDE\.md$
-^test\.R$
+^my-scripts\.R$

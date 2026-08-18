@@ -5,7 +5,7 @@ CLAUDE.md
 .httr-oauth
 .DS_Store
 .quarto
-test.R
+my-scripts.R
 inst/
 !inst/figures/
 !inst/figures/**
