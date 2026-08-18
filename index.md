@@ -22,7 +22,7 @@ an overview of what happens in all processing scripts.
 The full pipeline produces a single tibble, with one row per prey record
 per predator, suitable for analysis of diet composition, food levels,
 predator-prey mass ratios, and more! [See here for a
-walkthrough!](https://maxlindmark.github.io/stomachr/)
+walkthrough!](https://maxlindmark.github.io/stomachr/articles/stomachr.html)
 
 ## Installation
 
