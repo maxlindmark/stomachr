@@ -38,10 +38,11 @@ library(stomachr)
 download_stomach(path = "data/raw")
 ```
 
-Filter by year or country:
+Filter by year, country, or ecoregion:
 
 ```r
 download_stomach(path = "data/raw", year = 2000:2010, country = c("DK", "NO", "SE"))
+download_stomach(path = "data/raw", ecoregion = "Greater North Sea")
 ```
 
 ## Data

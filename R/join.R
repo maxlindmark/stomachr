@@ -16,7 +16,11 @@
 join_stomach_data <- function(path, impute_coords = TRUE) {
   fi <- readr::read_csv(file.path(path, "File_information.csv"), show_col_types = FALSE) |>
     janitor::clean_names()
-  hi <- readr::read_csv(file.path(path, "HaulInformation.csv"), show_col_types = FALSE) |>
+  hi <- readr::read_csv(
+    file.path(path, "HaulInformation.csv"),
+    col_types = readr::cols(ICESrectangle = readr::col_character()),
+    show_col_types = FALSE
+  ) |>
     janitor::clean_names() |>
     dplyr::rename(ices_rectangle = ice_srectangle)
   pred <- readr::read_csv(file.path(path, "PredatorInformation.csv"), show_col_types = FALSE) |>
@@ -89,10 +93,18 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
   dat <- dplyr::left_join(pred, prey, by = "tbl_predator_information_id")
 
   if (impute_coords) {
-    n_imputed_coords <- sum(is.na(dat$shoot_lat) & !is.na(dat$ices_rectangle))
+    # Some submissions carry ICES rectangle codes mangled by spreadsheet
+    # auto-formatting (e.g. "46E9" read as scientific notation and stored as
+    # "46000000000"). Treat anything not matching the real format as if it
+    # were missing, and recompute it from coordinates like any other gap.
+    valid_rect <- "^[0-9]{2}[A-Za-z][0-9]$"
+    has_valid_rect <- !is.na(dat$ices_rectangle) & grepl(valid_rect, dat$ices_rectangle)
+
+    n_imputed_coords <- sum(is.na(dat$shoot_lat) & has_valid_rect)
+    n_invalid_rect <- sum(!is.na(dat$ices_rectangle) & !has_valid_rect)
 
     rect_lookup <- dat |>
-      dplyr::filter(is.na(shoot_lat), !is.na(ices_rectangle)) |>
+      dplyr::filter(is.na(shoot_lat), has_valid_rect) |>
       dplyr::distinct(ices_rectangle) |>
       dplyr::mutate(
         coords         = purrr::map(ices_rectangle, mapplots::ices.rect),
@@ -110,7 +122,8 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
       dplyr::select(-shoot_lat_imp, -shoot_long_imp) |>
       dplyr::mutate(
         ices_rectangle = dplyr::if_else(
-          is.na(ices_rectangle) & !is.na(shoot_lat) & !is.na(shoot_long),
+          (is.na(ices_rectangle) | !grepl(valid_rect, ices_rectangle)) &
+            !is.na(shoot_lat) & !is.na(shoot_long),
           mapplots::ices.rect2(shoot_long, shoot_lat),
           ices_rectangle
         )
@@ -126,6 +139,9 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
   coords_line <- if (impute_coords) {
     c("i" = "{n_imputed_coords} haul location{?s} imputed from ICES rectangle midpoint")
   }
+  invalid_rect_line <- if (impute_coords && n_invalid_rect > 0) {
+    c("!" = "{n_invalid_rect} malformed ICES rectangle code{?s} recomputed from coordinates")
+  }
 
   cli::cli_inform(c(
     "join_stomach_data(): {n_pred} predator individual{?s}",
@@ -133,7 +149,8 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
     "i" = "{n_empty} empty or regurgitated",
     "i" = "{n_unid} with prey records but no prey species ID",
     " " = "(cannot contribute to diet composition but can contribute to total prey weight)",
-    coords_line
+    coords_line,
+    invalid_rect_line
   ))
 
   dat |> dplyr::rename(lat = shoot_lat, lon = shoot_long)
