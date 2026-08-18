@@ -22,5 +22,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Max Lindmark \email{max.lindmark@slu.se}
 
+Authors:
+\itemize{
+  \item Max Lindmark \email{max.lindmark@slu.se}
+}
+
 }
 \keyword{internal}

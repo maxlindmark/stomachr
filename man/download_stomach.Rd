@@ -8,6 +8,7 @@ download_stomach(
   path = ".",
   year = NULL,
   country = NULL,
+  ecoregion = NULL,
   reporting_org = NULL,
   cruise_id = NULL
 )
@@ -19,6 +20,11 @@ not exist. Defaults to the current working directory.}
 \item{year}{Integer vector of years, e.g. \code{2000:2010} or \code{c(2005, 2010)}.}
 
 \item{country}{Character vector of ISO country codes, e.g. \code{c("DK", "NO")}.}
+
+\item{ecoregion}{Character vector of ICES ecoregions to filter
+server-side, e.g. \code{"Greater North Sea"}. One or more of \code{"Baltic Sea"},
+\code{"Celtic Seas"}, \code{"Greater North Sea"}. See
+\url{https://stomachdata.ices.dk/inventory}.}
 
 \item{reporting_org}{Character vector of reporting organisation names.}
 
@@ -33,12 +39,13 @@ Downloads the four ICES stomach content CSVs
 \code{PreyInformation.csv}) from stomachdata.ices.dk and writes them to \code{path}.
 }
 \details{
-\code{year} and \code{country} are applied server-side (one request per combination).
-\code{reporting_org} and \code{cruise_id} are applied locally after download.
-Omitting all filters downloads the full database in a single request.
+\code{year}, \code{country}, and \code{ecoregion} are applied server-side (one request
+per combination). \code{reporting_org} and \code{cruise_id} are applied locally
+after download. Omitting all filters downloads the full database in a
+single request.
 
-Ecoregion filtering is not supported: the ICES API ignores ecoregion
-parameters and the downloaded CSVs contain no ecoregion column. Filter
-geographically after \code{\link[=join_stomach_data]{join_stomach_data()}} using \code{lat}/\code{lon} or
-\code{ices_rectangle}.
+Filtering by \code{ecoregion} restricts which records the API returns, but
+the downloaded CSVs contain no ecoregion column. For finer-than-ecoregion
+filtering, do it geographically after \code{\link[=join_stomach_data]{join_stomach_data()}} using
+\code{lat}/\code{lon} or \code{ices_rectangle}.
 }
