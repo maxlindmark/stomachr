@@ -32,9 +32,5 @@ stomachs.}
 A \code{ggplot} object.
 }
 \description{
-Plots haul locations as points on a Lambert Conformal Conic projection
-centred on the North Sea.
-}
-\details{
-Requires the \pkg{rnaturalearth} package for the background land layer.
+Plots haul locations as points on a map of the North Sea.
 }
