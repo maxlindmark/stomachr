@@ -86,16 +86,19 @@ follow the new four-table exchange format, joined by
 <p>You can download the data from the portal and go to Step 2. Or you
 can call <code><a href="../reference/download_stomach.html">download_stomach()</a></code>, which downloads data from the
 ICES API and writes the four CSVs to a local directory (which you
-control via <code>path</code>). Ecoregion filtering is not supported by
-the API (nor in the actual data it seems!), but you can filter
-geographically after joining using <code>lat</code>/<code>lon</code> or
-<code>ices_rectangle</code>.</p>
+control via <code>path</code>). You can filter server-side by
+<code>year</code>, <code>country</code>, and <code>ecoregion</code> (one
+of <code>"Baltic Sea"</code>, <code>"Celtic Seas"</code>,
+<code>"Greater North Sea"</code>); for finer-than-ecoregion filtering,
+do it geographically after joining using
+<code>lat</code>/<code>lon</code> or <code>ices_rectangle</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"data/raw"</span></span>
 <span><span class="fu"><a href="../reference/download_stomach.html">download_stomach</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span></code></pre></div>
-<p>To restrict to specific years or countries:</p>
+<p>To restrict to specific years, countries, or ecoregions:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/download_stomach.html">download_stomach</a></span><span class="op">(</span><span class="va">path</span>, year <span class="op">=</span> <span class="fl">2000</span><span class="op">:</span><span class="fl">2010</span>, country <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DK"</span>, <span class="st">"NO"</span>, <span class="st">"SE"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/download_stomach.html">download_stomach</a></span><span class="op">(</span><span class="va">path</span>, year <span class="op">=</span> <span class="fl">2000</span><span class="op">:</span><span class="fl">2010</span>, country <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DK"</span>, <span class="st">"NO"</span>, <span class="st">"SE"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/download_stomach.html">download_stomach</a></span><span class="op">(</span><span class="va">path</span>, ecoregion <span class="op">=</span> <span class="st">"Greater North Sea"</span><span class="op">)</span></span></code></pre></div>
 <p>In this vignette we run the pipeline on the raw CSVs for the North
 Sea (2020-2024) bundled with the package in <code>inst/extdata/</code>,
 as if you had downloaded them yourself.</p>
@@ -123,6 +126,14 @@ divide by 10</li>
 <li>Denmark (<code>DK</code>): <code>ind_wgt</code> is in kg – multiply
 by 1000</li>
 </ul>
+<p><strong>Known data-quality issue, handled automatically:</strong>
+some submissions (seen in Celtic Seas data) have corrupt
+<code>ICESrectangle</code> codes (e.g. <code>"46E9"</code> stored as
+<code>"46000000000"</code>, as if Excel read it as scientific notation).
+<code><a href="../reference/join_stomach_data.html">join_stomach_data()</a></code> detects codes that don’t match the real
+<code>##L#</code> format and recomputes them from
+<code>ShootLat</code>/<code>ShootLong</code>. How many rows were
+affected are printed by the function.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/join_stomach_data.html">join_stomach_data</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span>
 <span><span class="co">#&gt; join_stomach_data(): 9275 predator individuals</span></span>

@@ -18,3 +18,7 @@ Useful links:
 ## Author
 
 **Maintainer**: Max Lindmark <max.lindmark@slu.se>
+
+Authors:
+
+- Max Lindmark <max.lindmark@slu.se>

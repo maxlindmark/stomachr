@@ -23,10 +23,11 @@ You can download the data from the portal and go to Step 2. Or you can
 call
 [`download_stomach()`](https://maxlindmark.github.io/stomachr/reference/download_stomach.md),
 which downloads data from the ICES API and writes the four CSVs to a
-local directory (which you control via `path`). Ecoregion filtering is
-not supported by the API (nor in the actual data it seems!), but you can
-filter geographically after joining using `lat`/`lon` or
-`ices_rectangle`.
+local directory (which you control via `path`). You can filter
+server-side by `year`, `country`, and `ecoregion` (one of
+`"Baltic Sea"`, `"Celtic Seas"`, `"Greater North Sea"`); for
+finer-than-ecoregion filtering, do it geographically after joining using
+`lat`/`lon` or `ices_rectangle`.
 
 ``` r
 
@@ -34,11 +35,12 @@ path <- "data/raw"
 download_stomach(path)
 ```
 
-To restrict to specific years or countries:
+To restrict to specific years, countries, or ecoregions:
 
 ``` r
 
 download_stomach(path, year = 2000:2010, country = c("DK", "NO", "SE"))
+download_stomach(path, ecoregion = "Greater North Sea")
 ```
 
 In this vignette we run the pipeline on the raw CSVs for the North Sea
@@ -66,6 +68,15 @@ correction before proceeding):
 
 - Belgium (`BE`): `pred_length` is in mm – divide by 10
 - Denmark (`DK`): `ind_wgt` is in kg – multiply by 1000
+
+**Known data-quality issue, handled automatically:** some submissions
+(seen in Celtic Seas data) have corrupt `ICESrectangle` codes
+(e.g. `"46E9"` stored as `"46000000000"`, as if Excel read it as
+scientific notation).
+[`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md)
+detects codes that don’t match the real `##L#` format and recomputes
+them from `ShootLat`/`ShootLong`. How many rows were affected are
+printed by the function.
 
 ``` r
 

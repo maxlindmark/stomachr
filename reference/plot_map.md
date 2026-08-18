@@ -1,7 +1,6 @@
 # Plot sampling locations on a map
 
-Plots haul locations as points on a Lambert Conformal Conic projection
-centred on the North Sea.
+Plots haul locations as points on a map of the North Sea.
 
 ## Usage
 
@@ -47,7 +46,3 @@ plot_map(
 ## Value
 
 A `ggplot` object.
-
-## Details
-
-Requires the rnaturalearth package for the background land layer.
