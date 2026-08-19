@@ -264,8 +264,8 @@ impute_size <- function(dat,
       if (is.na(v)) 0L else as.integer(v)
     }
     pct <- function(key) sprintf("%.1f%%", 100 * cnt(key) / n_prey_total)
-    np <- function(key) sprintf("%d (%s)", cnt(key), pct(key))
-    np_n <- function(n_val) sprintf("%d (%.1f%%)", n_val, 100 * n_val / n_prey_total)
+    np <- function(key) sprintf("%s (%s)", fmt_n(cnt(key)), pct(key))
+    np_n <- function(n_val) sprintf("%s (%.1f%%)", fmt_n(n_val), 100 * n_val / n_prey_total)
     bsub <- function(label, key, prefix = V) {
       if (cnt(key) > 0) paste0(prefix, B, label, ": ", np(key)) else character(0)
     }
@@ -315,7 +315,7 @@ impute_size <- function(dat,
       dplyr::distinct(aphia_id_prey, lw_source) |>
       dplyr::count(lw_source) |>
       dplyr::arrange(match(lw_source, lw_order)) |>
-      dplyr::mutate(label = paste0(lw_source, ": ", n)) |>
+      dplyr::mutate(label = paste0(lw_source, ": ", fmt_n(n))) |>
       dplyr::pull(label) |>
       paste(collapse = ", ")
 
@@ -332,8 +332,9 @@ impute_size <- function(dat,
     )
 
     sections$prey <- c(
+      c(" " = ""),
       stats::setNames(
-        paste0("Prey: ", n_prey_total, " records | L/W params (unique AphiaIDs): ", prey_lw_src),
+        paste0("Prey: ", fmt_n(n_prey_total), " records | L/W params (unique AphiaIDs): ", prey_lw_src),
         " "
       ),
       prey_lines
@@ -346,14 +347,14 @@ impute_size <- function(dat,
     n_wgt_only <- sum(!is.na(dat$ind_wgt) & is.na(dat$pred_length))
     n_est <- sum(!is.na(dat$ind_weight_est))
     n_neither <- sum(is.na(dat$ind_wgt) & is.na(dat$pred_length))
-    ppct <- function(n) sprintf("%d (%.1f%%)", n, 100 * n / n_pred_total)
+    ppct <- function(n) sprintf("%s (%.1f%%)", fmt_n(n), 100 * n / n_pred_total)
 
     pred_lw_src <- dat |>
       dplyr::filter(!is.na(aphia_id_predator)) |>
       dplyr::distinct(aphia_id_predator, pred_lw_source) |>
       dplyr::count(pred_lw_source) |>
       dplyr::arrange(match(pred_lw_source, lw_order)) |>
-      dplyr::mutate(label = paste0(pred_lw_source, ": ", n)) |>
+      dplyr::mutate(label = paste0(pred_lw_source, ": ", fmt_n(n))) |>
       dplyr::pull(label) |>
       paste(collapse = ", ")
 
@@ -389,8 +390,9 @@ impute_size <- function(dat,
     ))
 
     sections$pred <- c(
+      c(" " = ""),
       stats::setNames(
-        paste0("Predator: ", n_pred_total, " rows | L/W params (unique AphiaIDs): ", pred_lw_src),
+        paste0("Predator: ", fmt_n(n_pred_total), " rows | L/W params (unique AphiaIDs): ", pred_lw_src),
         " "
       ),
       stats::setNames(pred_lines, rep(" ", length(pred_lines)))
@@ -398,8 +400,9 @@ impute_size <- function(dat,
   }
 
   cli::cli_inform(c(
-    "impute_size(): which = {.val {which}} | method = {.val {method}} | size = {.val {size}} | fill_if_no_size = {.val {fill_if_no_size}}",
-    unlist(sections, use.names = TRUE)
+    "{cli::col_cyan('impute_size()')}: which = {.val {which}} | method = {.val {method}} | size = {.val {size}} | fill_if_no_size = {.val {fill_if_no_size}}",
+    unlist(sections, use.names = TRUE),
+    " " = ""
   ))
 
   dat |>

@@ -36,8 +36,9 @@ trim_data <- function(dat) {
   dropped <- setdiff(names(dat), keep)
   if (length(dropped) > 0) {
     cli::cli_inform(c(
-      "trim_data(): dropped {length(dropped)} column{?s}:",
-      " " = paste(dropped, collapse = ", ")
+      "{cli::col_cyan('trim_data()')}: dropped {fmt_n(length(dropped))} {cli::qty(length(dropped))}column{?s}:",
+      " " = paste(dropped, collapse = ", "),
+      " " = ""
     ))
   }
 

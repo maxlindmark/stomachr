@@ -70,7 +70,7 @@ sense_check <- function(dat) {
     id_str <- paste(head(preds, 5L), collapse = ", ")
     if (length(preds) > 5L) id_str <- paste0(id_str, ", ...")
     cli::cli_inform(c(
-      "!" = "{label}: {n_row} row{?s} ({pct}) across {length(preds)} predator{?s}",
+      "!" = "{label}: {fmt_n(n_row)} {cli::qty(n_row)}row{?s} ({pct}) across {fmt_n(length(preds))} {cli::qty(length(preds))}predator{?s}",
       " " = "tbl_predator_information_id: {id_str}"
     ))
   }
@@ -78,7 +78,7 @@ sense_check <- function(dat) {
   n_flagged <- sum(!is.na(dat$sense_flag))
   pct <- sprintf("%.2f%%", 100 * n_flagged / n_total)
 
-  cli::cli_inform("sense_check(): {n_total} rows")
+  cli::cli_inform("{cli::col_cyan('sense_check()')}: {fmt_n(n_total)} rows")
   report_check("prey_length", "prey longer than predator (same unit assumed)")
   report_check("prey_weight", "individual prey heavier than predator")
   report_check("stomach_weight", "total stomach content heavier than predator")
@@ -86,8 +86,9 @@ sense_check <- function(dat) {
   report_check("count_censored", "count was 9999 sentinel (unknown multiplicity)")
   report_check("coord_outlier", "coordinates outside region (lat 45-72, lon -20 to 30)")
   cli::cli_inform(c(
-    "i" = "{n_flagged} row{?s} flagged ({pct})",
-    "i" = "Use {.fn drop_flagged} to remove, or inspect {.field tbl_predator_information_id} in raw data"
+    "i" = "{fmt_n(n_flagged)} {cli::qty(n_flagged)}row{?s} flagged ({pct})",
+    "i" = "Use {.fn drop_flagged} to remove, or inspect {.field tbl_predator_information_id} in raw data",
+    " " = ""
   ))
 
   dat
@@ -107,6 +108,9 @@ drop_flagged <- function(dat) {
   dat <- dplyr::filter(dat, is.na(sense_flag))
   n_dropped <- n_before - nrow(dat)
   pct <- sprintf("%.2f%%", 100 * n_dropped / n_before)
-  cli::cli_inform(c("v" = "drop_flagged(): removed {n_dropped} row{?s} ({pct}), {nrow(dat)} remaining"))
+  cli::cli_inform(c(
+    "v" = "{cli::col_cyan('drop_flagged()')}: removed {fmt_n(n_dropped)} {cli::qty(n_dropped)}row{?s} ({pct}), {fmt_n(nrow(dat))} remaining",
+    " " = ""
+  ))
   dat
 }

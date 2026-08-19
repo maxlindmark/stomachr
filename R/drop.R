@@ -50,14 +50,14 @@ drop_invalid <- function(dat, na_regurgitated = "keep") {
   pct <- function(x) sprintf("%4.1f%%", 100 * x / n_before)
 
   na_msg <- if (na_regurgitated == "keep") {
-    "regurgitated == NA assumed not regurgitated (n = {n_na_regurg} kept)"
+    "regurgitated == NA assumed not regurgitated (n = {fmt_n(n_na_regurg)} kept)"
   } else {
-    "regurgitated == NA assumed regurgitated (n = {n_na_regurg} dropped)"
+    "regurgitated == NA assumed regurgitated (n = {fmt_n(n_na_regurg)} dropped)"
   }
 
   cli::cli_inform(c(
-    "drop_invalid(): {n_before} -> {n_after} predator{?s} ({n_dropped} dropped, {pct(n_dropped)})",
-    "i" = "regurgitated >= 1 assumed regurgitated",
+    "{cli::col_cyan('drop_invalid()')}: {fmt_n(n_before)} -> {fmt_n(n_after)} {cli::qty(n_after)}predator{?s} ({fmt_n(n_dropped)} dropped, {pct(n_dropped)})",
+    "i" = "regurgitated value >= 1 assumed regurgitated",
     "i" = na_msg,
     "i" = "Dropped by country:"
   ))
@@ -67,10 +67,11 @@ drop_invalid <- function(dat, na_regurgitated = "keep") {
   } else {
     print(data.frame(
       country          = n_dropped_by_country$country,
-      n                = n_dropped_by_country$n_dropped,
+      n                = fmt_n(n_dropped_by_country$n_dropped),
       percent_of_total = pct(n_dropped_by_country$n_dropped)
     ))
   }
+  message("")
 
   dat
 }
