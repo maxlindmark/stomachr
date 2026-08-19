@@ -11,7 +11,16 @@ stomachr is a package that downloads [ICES stomach content data](https://stomach
 
 The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by [tidylog](https://github.com/elbersb/tidylog), it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.
 
-The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! [See here for vignettes!](https://maxlindmark.github.io/stomachr/articles/example-workflow.html)
+The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more!
+
+For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the [Articles](https://maxlindmark.github.io/stomachr/articles/index.html), or locally:
+
+```r
+vignette("example-workflow", package = "stomachr")
+vignette("example-analysis", package = "stomachr")
+vignette("database-overview", package = "stomachr")
+browseVignettes("stomachr")
+```
 
 ## Installation
 
@@ -107,18 +116,6 @@ dat <- join_stomach_data("data/raw") |>
   trim_data() |>
   sense_check() |>
   drop_flagged()
-```
-
-
-## Articles
-
-For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the [Articles](https://maxlindmark.github.io/stomachr/articles/index.html), or locally:
-
-```r
-vignette("example-workflow", package = "stomachr")
-vignette("example-analysis", package = "stomachr")
-vignette("database-overview", package = "stomachr")
-browseVignettes("stomachr")
 ```
 
 ## References
