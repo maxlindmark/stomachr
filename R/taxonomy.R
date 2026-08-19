@@ -50,14 +50,15 @@ add_taxonomy <- function(dat) {
   prey_bullet <- if (n_prey_unresolved == 0) "v" else "!"
 
   cli::cli_inform(c(
-    "add_taxonomy(): WoRMS names resolved",
+    "{cli::col_cyan('add_taxonomy()')}: WoRMS names resolved",
     stats::setNames(
       c(
-        "Predator AphiaIDs: {n_pred_ids} unique, {n_pred_unresolved} unresolved",
-        "Prey AphiaIDs: {n_prey_ids} unique, {n_prey_unresolved} unresolved"
+        "Predator AphiaIDs: {fmt_n(n_pred_ids)} unique, {fmt_n(n_pred_unresolved)} unresolved",
+        "Prey AphiaIDs: {fmt_n(n_prey_ids)} unique, {fmt_n(n_prey_unresolved)} unresolved"
       ),
       c(pred_bullet, prey_bullet)
-    )
+    ),
+    " " = ""
   ))
 
   dat
