@@ -1,0 +1,126 @@
+---
+title: "Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+`stomachr` provides a tidy pipeline for downloading, reading, cleaning, and preparing ICES stomach content data for various diet analysis. The data come from the [ICES stomach content database](https://stomachdata.ices.dk) and follow the new four-table exchange format, joined by `tblUploadID`, `tblHaulID`, and `tblPredatorInformationID`.
+
+## Installation
+
+```{r install}
+# install.packages("remotes")
+remotes::install_github("maxlindmark/stomachr")
+```
+
+## Workflow
+
+### Step 1: Download
+
+You can download the data from the portal and go to Step 2. Or you can call `download_stomach()`, which downloads data from the ICES API and writes the four CSVs to a local directory (which you control via `path`). You can filter by `year`, `country`, and `ecoregion` (one of `"Baltic Sea"`, `"Celtic Seas"`, `"Greater North Sea"`).
+
+```{r download}
+path <- "data/raw"
+download_stomach(path)
+```
+
+For example, to restrict to specific years, countries, or ecoregions:
+
+```{r download-subset}
+download_stomach(path, year = 2000:2010, country = c("DK", "NO", "SE"))
+download_stomach(path, ecoregion = "Greater North Sea")
+```
+
+In this vignette we run the pipeline on raw CSVs bundled with the package in `inst/extdata/`, as if you had downloaded them yourself. They were produced with, seen [here](https://github.com/maxlindmark/stomachr/blob/master/data-raw/build_example_data.R):
+
+```{r download-example}
+download_stomach(path, year = 2020:2024, ecoregion = "Greater North Sea")
+```
+
+```{r load-extdata, eval = TRUE}
+library(stomachr)
+path <- system.file("extdata", package = "stomachr")
+```
+
+### Step 2: `join_stomach_data()`
+
+The next step is to join the four CSVs. This means attaching haul and file metadata to predators, classifying each stomach as `"food"`, `"empty"`, or `"unidentified"`, deduplicates exact-duplicate prey rows (present in some national submissions), converts prey length from mm to cm, handles the count sentinel value (9999 = unknown multiplicity), and optionally imputes missing coordinates from ICES rectangle midpoints (defaults to `"food"`).
+
+<span style="color:red;">**Known country-specific unit issues** (currently requires manual correction before proceeding):
+
+There is no predator length or weight unit in the data (only for prey). We want cm and grams.
+
+- Belgium (`BE`): `pred_length` is in mm -- divide by 10
+- Denmark (`DK`): `ind_wgt` is in kg -- multiply by 1000</span>
+
+**Known data-quality issue, handled automatically:** some submissions (seen in
+Celtic Seas data) have corrupt `ICESrectangle` codes (e.g. `"46E9"` stored as `"46000000000"`, as if Excel read it as scientific notation). `join_stomach_data()` detects codes that don't match the real `##L#` format and recomputes them from `ShootLat`/`ShootLong`. How many rows were affected are printed by the function.
+
+```{r unit-fix, eval = TRUE}
+dat <- join_stomach_data(path)
+
+dat <- dat |>
+  dplyr::mutate(
+    pred_length = dplyr::if_else(country == "BE", pred_length / 10, pred_length),
+    ind_wgt     = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt)
+  )
+```
+
+### Step 3: `drop_invalid()`
+
+Removes predators with `regurgitated >= 1`. Stomach contents of regurgitated fish are techically not usable. The `na_regurgitated` argument controls whether `NA` values are treated as not regurgitated (`"keep"`, default) or regurgitated (`"drop"`).
+
+```{r drop, eval = TRUE}
+dat <- drop_invalid(dat, na_regurgitated = "keep")
+```
+
+### Step 4: `add_taxonomy()`
+
+Joins scientific names and higher taxonomy (class, order, family, phylum) for both predators and prey from the internal WoRMS lookup. Prey with `aphia_id_prey = NA` in non-empty stomachs are labelled `"Unknown"` so their weight is not silently lost.
+
+```{r taxonomy, eval = TRUE}
+dat <- add_taxonomy(dat)
+```
+
+### Step 5: `impute_size()`
+
+Estimates missing prey weight and/or length via L/W parameters or observed means, and estimates missing predator weight from length. Also creates the final `predator_weight` column (observed weight if available, otherwise estimated from length). L/W parameters are looked up from the internal table (FishBase for fish, Robinson 2010 for invertebrates) with hierarchical fallback: species -> family -> order -> class -> phylum -> universal (a = 0.01, b = 3).
+
+Future versions of this package could fit mixed models instead and impute weights in a more clever way, accounting also for size, etc!
+
+- `which`: impute `"prey"`, `"pred"`, or `"both"` (default)
+- `method`: `"lw_params"` (default) uses the bundled L/W table; `"observations"` uses mean sizes from other records of the same species
+- `size`: impute `"weight"`, `"length"`, or `"both"` (default)
+- `fill_if_no_size`: if `TRUE` (default), prey with no recorded size borrow from other records of the same species before applying L/W
+
+```{r impute, eval = TRUE}
+dat <- impute_size(dat, which = "both", method = "lw_params", size = "both")
+```
+
+### Step 6: `trim_data()`
+
+Returns only the analysis-ready columns.
+
+```{r trim, eval = TRUE}
+dat <- trim_data(dat)
+```
+
+### Steps 7--8: `sense_check()` and `drop_flagged()`
+
+`sense_check()` adds a `sense_flag` column marking implausible records. `drop_flagged()` removes them. You can inspect flagged records before dropping by examining `tbl_predator_information_id` in the raw data.
+
+```{r check, eval = TRUE}
+dat <- sense_check(dat)
+dat <- drop_flagged(dat)
+```

@@ -11,7 +11,7 @@ stomachr is a package that downloads [ICES stomach content data](https://stomach
 
 The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by [tidylog](https://github.com/elbersb/tidylog), it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.
 
-The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! [See here for a walkthrough!](https://maxlindmark.github.io/stomachr/articles/stomachr.html)
+The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! [See here for vignettes!](https://maxlindmark.github.io/stomachr/articles/example-workflow.html)
 
 ## Installation
 
@@ -93,7 +93,7 @@ The key functions of this package, which takes you from the four raw csv to some
 | `worms_lookup` | WoRMS taxonomy for every AphiaID in the ICES database |
 | `lw_params` | Length-weight parameters with taxonomic fallback (FishBase for fish; Robinson 2010 for invertebrates) |
 
-The four raw North Sea CSV files (2020-2024) are bundled in `inst/extdata/` and used in `vignette("stomachr")` to demonstrate the full pipeline.
+The four raw North Sea CSV files (2020-2024) are bundled in `inst/extdata/` and used in `vignette("example-workflow", package = "stomachr")` to demonstrate the full pipeline.
 
 ### Clean
 
@@ -110,16 +110,20 @@ dat <- join_stomach_data("data/raw") |>
 ```
 
 
-## Vignette
+## Articles
 
-For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), see:
+For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the [Articles](https://maxlindmark.github.io/stomachr/articles/index.html), or locally:
 
 ```r
-vignette("stomachr")
+vignette("example-workflow", package = "stomachr")
+vignette("example-analysis", package = "stomachr")
+vignette("database-overview", package = "stomachr")
+browseVignettes("stomachr")
 ```
 
 ## References
 
-<sup>1</sup> Froese, R. and D. Pauly (eds.) FishBase. World Wide Web electronic publication. www.fishbase.org.
+<sup>1</sup> Froese, R. and D. Pauly. Editors. 2026. FishBase. World Wide Web electronic publication.
+www.fishbase.org, version (02/2026).
 
 <sup>2</sup> Robinson, R.A. et al. (2010). Trophic relationships of marine benthic invertebrates in the North Sea. *Journal of the Marine Biological Association of the United Kingdom*, 90(7), 1375–1388.
