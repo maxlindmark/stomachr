@@ -63,14 +63,57 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
     )
 
   prey <- prey |>
+    dplyr::left_join(fi |> dplyr::select(tbl_upload_id, country), by = "tbl_upload_id") |>
     dplyr::select(
       tbl_predator_information_id, tbl_prey_information_id,
       aphia_id_prey, ident_met, digestion_stage, grav_method,
       sub_factor, prey_sequence, count, unit_wgt, weight,
-      unit_lngt, length, other_items, other_count, other_wgt, analysing_org
+      unit_lngt, length, other_items, other_count, other_wgt, analysing_org,
+      country
     ) |>
-    dplyr::rename(prey_length = length) |>
-    dplyr::mutate(prey_length = prey_length / 10) |> # mm -> cm
+    dplyr::rename(prey_length = length)
+
+  # Most records don't tag UnitWgt/UnitLngt. Where missing, fall back to
+  # whatever unit that country's own labeled records use, rather than
+  # assuming g/mm for everyone -- every country is 100% consistent in the
+  # unit it uses when it does label (NO always mg/cm, everyone else always
+  # g/mm when labeled).
+  wgt_default <- prey |>
+    dplyr::filter(!is.na(unit_wgt)) |>
+    dplyr::count(country, unit_wgt, sort = TRUE) |>
+    dplyr::distinct(country, .keep_all = TRUE) |>
+    dplyr::select(country, wgt_default = unit_wgt)
+
+  lngt_default <- prey |>
+    dplyr::filter(!is.na(unit_lngt)) |>
+    dplyr::count(country, unit_lngt, sort = TRUE) |>
+    dplyr::distinct(country, .keep_all = TRUE) |>
+    dplyr::select(country, lngt_default = unit_lngt)
+
+  prey <- prey |>
+    dplyr::left_join(wgt_default, by = "country") |>
+    dplyr::left_join(lngt_default, by = "country") |>
+    dplyr::mutate(
+      unit_wgt  = dplyr::coalesce(unit_wgt, wgt_default, "g"),
+      unit_lngt = dplyr::coalesce(unit_lngt, lngt_default, "mm")
+    )
+
+  unknown_wgt  <- setdiff(unique(prey$unit_wgt), c("g", "mg"))
+  unknown_lngt <- setdiff(unique(prey$unit_lngt), c("mm", "cm"))
+  if (length(unknown_wgt) || length(unknown_lngt)) {
+    cli::cli_abort(c(
+      "Unrecognised prey unit{?s} in raw data.",
+      "i" = "unit_wgt: {.val {unknown_wgt}}",
+      "i" = "unit_lngt: {.val {unknown_lngt}}"
+    ))
+  }
+
+  prey <- prey |>
+    dplyr::mutate(
+      weight      = dplyr::if_else(unit_wgt == "mg", weight / 1000, weight),
+      prey_length = dplyr::if_else(unit_lngt == "mm", prey_length / 10, prey_length)
+    ) |>
+    dplyr::select(-wgt_default, -lngt_default, -country) |>
     # Some submissions (e.g. NL) contain exact triplicate prey rows with
     # consecutive tbl_prey_information_id values; deduplicate before deriving.
     dplyr::distinct(
@@ -132,25 +175,33 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
 
   n_pred <- dplyr::n_distinct(dat$tbl_predator_information_id)
   n_tab <- pred |> dplyr::count(stomach_status)
-  n_empty <- n_tab$n[n_tab$stomach_status == "empty"]
-  n_unid <- n_tab$n[n_tab$stomach_status == "unidentified"]
-  n_food <- n_tab$n[n_tab$stomach_status == "food"]
+  n_for_status <- function(status) {
+    v <- n_tab$n[n_tab$stomach_status == status]
+    if (length(v) == 0) 0L else v
+  }
+  n_empty <- n_for_status("empty")
+  n_unid <- n_for_status("unidentified")
+  n_food <- n_for_status("food")
+  pct_food  <- sprintf("%.1f%%", 100 * n_food / n_pred)
+  pct_empty <- sprintf("%.1f%%", 100 * n_empty / n_pred)
+  pct_unid  <- sprintf("%.1f%%", 100 * n_unid / n_pred)
 
   coords_line <- if (impute_coords) {
-    c("i" = "{n_imputed_coords} haul location{?s} imputed from ICES rectangle midpoint")
+    c("i" = "{fmt_n(n_imputed_coords)} {cli::qty(n_imputed_coords)}haul location{?s} imputed from ICES rectangle midpoint")
   }
   invalid_rect_line <- if (impute_coords && n_invalid_rect > 0) {
-    c("!" = "{n_invalid_rect} malformed ICES rectangle code{?s} recomputed from coordinates")
+    c("!" = "{fmt_n(n_invalid_rect)} malformed ICES rectangle {cli::qty(n_invalid_rect)}code{?s} recomputed from coordinates")
   }
 
   cli::cli_inform(c(
-    "join_stomach_data(): {n_pred} predator individual{?s}",
-    "v" = "{n_food} with identifiable prey",
-    "i" = "{n_empty} empty or regurgitated",
-    "i" = "{n_unid} with prey records but no prey species ID",
+    "{cli::col_cyan('join_stomach_data()')}: {fmt_n(n_pred)} {cli::qty(n_pred)}predator individual{?s}",
+    "v" = "{fmt_n(n_food)} ({pct_food}) with identifiable prey",
+    "i" = "{fmt_n(n_empty)} ({pct_empty}) empty or regurgitated",
+    "i" = "{fmt_n(n_unid)} ({pct_unid}) with prey records but no prey species ID",
     " " = "(cannot contribute to diet composition but can contribute to total prey weight)",
     coords_line,
-    invalid_rect_line
+    invalid_rect_line,
+    " " = ""
   ))
 
   dat |> dplyr::rename(lat = shoot_lat, lon = shoot_long)
