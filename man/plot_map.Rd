@@ -9,7 +9,9 @@ plot_map(
   color = "predator_scientific_name",
   facet = "predator_scientific_name",
   species = NULL,
-  ncol = 4
+  ncol = 4,
+  xlim = NULL,
+  ylim = NULL
 )
 }
 \arguments{
@@ -27,6 +29,9 @@ plot_map(
 stomachs.}
 
 \item{ncol}{Number of columns in \code{facet_wrap}.}
+
+\item{xlim, ylim}{Optional length-2 numeric vectors overriding the
+automatic (data range + padding) map extent.}
 }
 \value{
 A \code{ggplot} object.
