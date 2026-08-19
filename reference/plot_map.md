@@ -10,7 +10,9 @@ plot_map(
   color = "predator_scientific_name",
   facet = "predator_scientific_name",
   species = NULL,
-  ncol = 4
+  ncol = 4,
+  xlim = NULL,
+  ylim = NULL
 )
 ```
 
@@ -42,6 +44,11 @@ plot_map(
 - ncol:
 
   Number of columns in `facet_wrap`.
+
+- xlim, ylim:
+
+  Optional length-2 numeric vectors overriding the automatic (data
+  range + padding) map extent.
 
 ## Value
 

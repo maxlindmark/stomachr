@@ -1,8 +1,10 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://maxlindmark.github.io/stomachr/404.html</loc></url>
 <url><loc>https://maxlindmark.github.io/stomachr/LICENSE-text.html</loc></url>
+<url><loc>https://maxlindmark.github.io/stomachr/articles/database-overview.html</loc></url>
+<url><loc>https://maxlindmark.github.io/stomachr/articles/example-analysis.html</loc></url>
+<url><loc>https://maxlindmark.github.io/stomachr/articles/example-workflow.html</loc></url>
 <url><loc>https://maxlindmark.github.io/stomachr/articles/index.html</loc></url>
-<url><loc>https://maxlindmark.github.io/stomachr/articles/stomachr.html</loc></url>
 <url><loc>https://maxlindmark.github.io/stomachr/authors.html</loc></url>
 <url><loc>https://maxlindmark.github.io/stomachr/index.html</loc></url>
 <url><loc>https://maxlindmark.github.io/stomachr/news/index.html</loc></url>

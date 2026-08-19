@@ -37,7 +37,14 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/stomachr.html">Get started</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/database-overview.html">Database overview</a></li>
+    <li><a class="dropdown-item" href="articles/example-analysis.html">Example analysis</a></li>
+    <li><a class="dropdown-item" href="articles/example-workflow.html">Workflow</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
@@ -65,7 +72,7 @@
 
 <p>stomachr is a package that downloads <a href="https://stomachdata.ices.dk/inventory" class="external-link">ICES stomach content data</a> and provides tools for merging, enriching, imputing, trimming, quality-checking and filtering stomach data from the ICES stomach database. It’s meant to complement the <a href="https://github.com/MortenVinther/FishStomachs" class="external-link">FishStomachs R package</a>, by working directly from the new ICES stomach database and the new format, as well as focusing more the actual data preparation and general use, rather then preparing aggregated stomachs for the SMS model.</p>
 <p>The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by <a href="https://github.com/elbersb/tidylog" class="external-link">tidylog</a>, it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.</p>
-<p>The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! <a href="https://maxlindmark.github.io/stomachr/articles/stomachr.html">See here for a walkthrough!</a></p>
+<p>The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! <a href="https://maxlindmark.github.io/stomachr/articles/example-workflow.html">See here for vignettes!</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -232,7 +239,7 @@
 </tr>
 </tbody>
 </table>
-<p>The four raw North Sea CSV files (2020-2024) are bundled in <code>inst/extdata/</code> and used in <code><a href="articles/stomachr.html">vignette("stomachr")</a></code> to demonstrate the full pipeline.</p>
+<p>The four raw North Sea CSV files (2020-2024) are bundled in <code>inst/extdata/</code> and used in <code><a href="articles/example-workflow.html">vignette("example-workflow", package = "stomachr")</a></code> to demonstrate the full pipeline.</p>
 <div class="section level3">
 <h3 id="clean">Clean<a class="anchor" aria-label="anchor" href="#clean"></a>
 </h3>
@@ -248,16 +255,19 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="vignette">Vignette<a class="anchor" aria-label="anchor" href="#vignette"></a>
+<h2 id="articles">Articles<a class="anchor" aria-label="anchor" href="#articles"></a>
 </h2>
-<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), see:</p>
+<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the <a href="https://maxlindmark.github.io/stomachr/articles/index.html">Articles</a>, or locally:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"stomachr"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-workflow"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-analysis"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"database-overview"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"stomachr"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p><sup>1</sup> Froese, R. and D. Pauly (eds.) FishBase. World Wide Web electronic publication. www.fishbase.org.</p>
+<p><sup>1</sup> Froese, R. and D. Pauly. Editors. 2026. FishBase. World Wide Web electronic publication. www.fishbase.org, version (02/2026).</p>
 <p><sup>2</sup> Robinson, R.A. et al. (2010). Trophic relationships of marine benthic invertebrates in the North Sea. <em>Journal of the Marine Biological Association of the United Kingdom</em>, 90(7), 1375–1388.</p>
 </div>
 </div>

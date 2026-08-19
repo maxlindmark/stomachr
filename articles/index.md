@@ -2,5 +2,8 @@
 
 ### All vignettes
 
-- [Getting started with
-  stomachr](https://maxlindmark.github.io/stomachr/articles/stomachr.md):
+- [Database
+  overview](https://maxlindmark.github.io/stomachr/articles/database-overview.md):
+- [Example
+  analysis](https://maxlindmark.github.io/stomachr/articles/example-analysis.md):
+- [Workflow](https://maxlindmark.github.io/stomachr/articles/example-workflow.md):

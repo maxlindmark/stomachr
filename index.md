@@ -21,8 +21,8 @@ an overview of what happens in all processing scripts.
 
 The full pipeline produces a single tibble, with one row per prey record
 per predator, suitable for analysis of diet composition, food levels,
-predator-prey mass ratios, and more! [See here for a
-walkthrough!](https://maxlindmark.github.io/stomachr/articles/stomachr.html)
+predator-prey mass ratios, and more! [See here for
+vignettes!](https://maxlindmark.github.io/stomachr/articles/example-workflow.html)
 
 ## Installation
 
@@ -118,7 +118,7 @@ to something ready for analysing, are these:
 
 The four raw North Sea CSV files (2020-2024) are bundled in
 `inst/extdata/` and used in
-[`vignette("stomachr")`](https://maxlindmark.github.io/stomachr/articles/stomachr.md)
+[`vignette("example-workflow", package = "stomachr")`](https://maxlindmark.github.io/stomachr/articles/example-workflow.md)
 to demonstrate the full pipeline.
 
 ### Clean
@@ -136,20 +136,26 @@ dat <- join_stomach_data("data/raw") |>
   drop_flagged()
 ```
 
-## Vignette
+## Articles
 
 For a full walkthrough of the pipeline and example analyses (diet
-composition, predator–prey mass ratios, temporal trends), see:
+composition, predator–prey mass ratios, temporal trends), a database
+coverage/migration status check, and other guides, see the
+[Articles](https://maxlindmark.github.io/stomachr/articles/index.html),
+or locally:
 
 ``` r
 
-vignette("stomachr")
+vignette("example-workflow", package = "stomachr")
+vignette("example-analysis", package = "stomachr")
+vignette("database-overview", package = "stomachr")
+browseVignettes("stomachr")
 ```
 
 ## References
 
-¹ Froese, R. and D. Pauly (eds.) FishBase. World Wide Web electronic
-publication. www.fishbase.org.
+¹ Froese, R. and D. Pauly. Editors. 2026. FishBase. World Wide Web
+electronic publication. www.fishbase.org, version (02/2026).
 
 ² Robinson, R.A. et al. (2010). Trophic relationships of marine benthic
 invertebrates in the North Sea. *Journal of the Marine Biological
