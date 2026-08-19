@@ -4,7 +4,7 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, news]
+    left: [articles, reference, news]
 
 reference:
   - title: Download
