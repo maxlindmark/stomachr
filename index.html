@@ -72,15 +72,21 @@
 
 <p>stomachr is a package that downloads <a href="https://stomachdata.ices.dk/inventory" class="external-link">ICES stomach content data</a> and provides tools for merging, enriching, imputing, trimming, quality-checking and filtering stomach data from the ICES stomach database. It’s meant to complement the <a href="https://github.com/MortenVinther/FishStomachs" class="external-link">FishStomachs R package</a>, by working directly from the new ICES stomach database and the new format, as well as focusing more the actual data preparation and general use, rather then preparing aggregated stomachs for the SMS model.</p>
 <p>The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by <a href="https://github.com/elbersb/tidylog" class="external-link">tidylog</a>, it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.</p>
-<p>The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more! <a href="https://maxlindmark.github.io/stomachr/articles/example-workflow.html">See here for vignettes!</a></p>
+<p>The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more!</p>
+<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the <a href="https://maxlindmark.github.io/stomachr/articles/index.html">Articles</a>, or locally:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-workflow"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-analysis"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"database-overview"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"stomachr"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"maxlindmark/stomachr"</span><span class="op">)</span></span></code></pre></div>
 <p>To also build the vignette locally, change the install command:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"maxlindmark/stomachr"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -90,12 +96,12 @@
 <div class="section level3">
 <h3 id="download">Download<a class="anchor" aria-label="anchor" href="#download"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/maxlindmark/stomachr" class="external-link">stomachr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/download_stomach.html">download_stomach</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"data/raw"</span><span class="op">)</span></span></code></pre></div>
 <p>Filter by year, country, or ecoregion:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/download_stomach.html">download_stomach</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"data/raw"</span>, year <span class="op">=</span> <span class="fl">2000</span><span class="op">:</span><span class="fl">2010</span>, country <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DK"</span>, <span class="st">"NO"</span>, <span class="st">"SE"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/download_stomach.html">download_stomach</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"data/raw"</span>, ecoregion <span class="op">=</span> <span class="st">"Greater North Sea"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -244,7 +250,7 @@
 <h3 id="clean">Clean<a class="anchor" aria-label="anchor" href="#clean"></a>
 </h3>
 <p>A full pipeline may look like this:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/join_stomach_data.html">join_stomach_data</a></span><span class="op">(</span><span class="st">"data/raw"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="op">)</span><span class="op">|&gt;</span></span>
@@ -253,16 +259,6 @@
 <span>  <span class="fu"><a href="reference/sense_check.html">sense_check</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/drop_flagged.html">drop_flagged</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
-</div>
-<div class="section level2">
-<h2 id="articles">Articles<a class="anchor" aria-label="anchor" href="#articles"></a>
-</h2>
-<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the <a href="https://maxlindmark.github.io/stomachr/articles/index.html">Articles</a>, or locally:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-workflow"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-analysis"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"database-overview"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"stomachr"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
