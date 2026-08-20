@@ -89,7 +89,7 @@ plot_map(filter(dat, ecoregion == "Baltic Sea"),
 plot_map(
   filter(dat, ecoregion == "Celtic Seas"),
   color = "country", facet = "year", ncol = 6,
-  xlim = c(-11, 3), ylim = c(50, 62)
+  xlim = c(-9, 6), ylim = c(54, 64)
 )
 ```
 
