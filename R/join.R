@@ -5,6 +5,13 @@
 #' them into a single flat tibble, classifies each stomach as `"food"`,
 #' `"empty"`, or `"unidentified"`, deduplicates exact-duplicate prey rows,
 #' and optionally imputes missing coordinates from ICES rectangle midpoints.
+#' Also warns if any predator's raw `Length`/`IndWgt` is wildly inconsistent
+#' with an isometric length-weight curve (`W = 0.01 * L^3`), a sign of a
+#' unit error (e.g. length in mm instead of cm), and if any predator's
+#' `Number` is `<= 0` (not a valid pooled-sample count) -- neither check
+#' fixes anything, both are raw-data sanity checks -- see
+#' `vignette("known-issues", package = "stomachr")` for worked examples of
+#' what these have caught in the live database.
 #'
 #' @param path Path to the directory containing the four ICES CSV files.
 #' @param impute_coords If `TRUE` (default), missing `lat`/`lon` are imputed
@@ -39,6 +46,34 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
     by = c("tbl_upload_id", "tbl_haul_id")
   ) |>
     dplyr::rename(pred_length = length)
+
+  # Flag predator records whose weight is wildly inconsistent with an
+  # isometric length-weight curve (W = 0.01 * L^3) -- a rough universal cube
+  # law, but real unit errors (length in mm not cm, weight in kg not g)
+  # produce ~1000x shifts, dwarfing normal biological variation (typically
+  # well under 1 log10 unit either way). This doesn't identify which field
+  # is wrong or fix anything -- it's a raw-data sanity check.
+  size_check <- pred |>
+    dplyr::filter(!is.na(pred_length), pred_length > 0, !is.na(ind_wgt), ind_wgt > 0) |>
+    dplyr::mutate(log_ratio = log10(ind_wgt / (0.01 * pred_length^3)))
+
+  n_size_flagged <- sum(abs(size_check$log_ratio) > 1.5)
+  if (n_size_flagged > 0) {
+    cli::cli_warn(c(
+      "!" = "There are outliers in predator size compared to a W=0.01*L^3 that indicate input errors. Check raw data.",
+      "i" = "{fmt_n(n_size_flagged)} of {fmt_n(nrow(size_check))} predator record{?s} flagged (|log10(observed weight / predicted weight)| > 1.5)"
+    ))
+  }
+
+  # Number is a specimen count ("pooled samples") -- <= 0 is not a valid
+  # count and indicates an input error, same spirit as the size check above.
+  n_number_flagged <- sum(!is.na(pred$number) & pred$number <= 0)
+  if (n_number_flagged > 0) {
+    cli::cli_warn(c(
+      "!" = "There are predator records with `Number` <= 0, which is not a valid pooled-sample count. Check raw data.",
+      "i" = "{fmt_n(n_number_flagged)} of {fmt_n(sum(!is.na(pred$number)))} predator record{?s} flagged (Number <= 0)"
+    ))
+  }
 
   # Classify stomach status before the prey join so the distinction between
   # truly empty stomachs and unidentified-only stomachs is not lost.
