@@ -16,15 +16,22 @@ path <- system.file("extdata", package = "stomachr")
 
 dat <- join_stomach_data(path) |>
   dplyr::mutate(
-    pred_length = dplyr::if_else(country == "BE", pred_length / 10, pred_length),
-    ind_wgt     = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt)
+    pred_length  = dplyr::if_else(country == "BE" | tbl_upload_id == "8337", pred_length / 10, pred_length),
+    ind_wgt      = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt),
+    regurgitated = dplyr::if_else(tbl_upload_id == "8337", regurgitated - 1, regurgitated),
+    number       = dplyr::if_else(country == "NO", 1, number)
   ) |>
-  drop_invalid() |>
   add_taxonomy() |>
+  unpool_predators() |>
+  drop_invalid() |>
   impute_size() |>
   trim_data() |>
   sense_check() |>
   drop_flagged()
+#> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
+#>   input errors. Check raw data.
+#> ℹ 2,705 of 8,886 predator record flagged (|log10(observed weight / predicted
+#>   weight)| > 1.5)
 #> join_stomach_data(): 8,886 predator individuals
 #> ✔ 3,845 (43.3%) with identifiable prey
 #> ℹ 4,084 (46.0%) empty or regurgitated
@@ -32,6 +39,10 @@ dat <- join_stomach_data(path) |>
 #>   (cannot contribute to diet composition but can contribute to total prey
 #>   weight)
 #> ℹ 0 haul locations imputed from ICES rectangle midpoint
+#>   
+#> add_taxonomy(): WoRMS names resolved
+#> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
+#> ! Prey AphiaIDs: 254 unique, 3 unresolved
 #>   
 #> drop_invalid(): 8,886 -> 8,559 predators (327 dropped, 3.7%)
 #> ℹ regurgitated value >= 1 assumed regurgitated
@@ -44,10 +55,7 @@ dat <- join_stomach_data(path) |>
 #> 4      NO  30             0.3%
 #> 5      SE 159             1.8%
 #> 
-#> add_taxonomy(): WoRMS names resolved
-#> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
-#> ! Prey AphiaIDs: 254 unique, 3 unresolved
-#>   impute_size(): which = "both" | method = "lw_params" | size = "both" |
+#> impute_size(): which = "both" | method = "lw_params" | size = "both" |
 #> fill_if_no_size = TRUE
 #> 
 #> Prey: 7,985 records | L/W params (unique AphiaIDs): species: 65, family: 39,
@@ -66,14 +74,13 @@ dat <- join_stomach_data(path) |>
 #> Predator: 13,935 rows | L/W params (unique AphiaIDs): species: 22, family: 1
 #> |-- weight and length observed: 13,935 (100.0%)
 #> +-- weight observed, length missing: 0 (0.0%)
-#>   trim_data(): dropped 33 columns:
-#>   ship, gear, haul_no, station_number, fish_id, ind_wgt, number,
-#>   measurement_increment, code, maturity_scale, maturity_stage,
-#>   preservation_method, stomach_fullness, full_stom_wgt, empty_stom_wgt,
-#>   stomach_empty, gen_samp, notes, ident_met, grav_method, prey_sequence,
-#>   unit_wgt, weight, unit_lngt, other_items, other_count, predator_rank,
-#>   predator_phylum, predator_genus, prey_rank, prey_phylum, prey_genus,
-#>   ind_weight_est
+#>   trim_data(): dropped 32 columns:
+#>   ship, gear, haul_no, station_number, fish_id, ind_wgt, measurement_increment,
+#>   code, maturity_scale, maturity_stage, preservation_method, stomach_fullness,
+#>   full_stom_wgt, empty_stom_wgt, stomach_empty, gen_samp, notes, ident_met,
+#>   grav_method, prey_sequence, unit_wgt, weight, unit_lngt, other_items,
+#>   other_count, predator_rank, predator_phylum, predator_genus, prey_rank,
+#>   prey_phylum, prey_genus, ind_weight_est
 #>   sense_check(): 13,935 rows! prey longer than predator (same unit assumed): 1 row (0.0%) across 1 predator
 #>   tbl_predator_information_id: 110462! total stomach content heavier than predator: 1 row (0.0%) across 1 predator
 #>   tbl_predator_information_id: 110348ℹ 2 rows flagged (0.01%)

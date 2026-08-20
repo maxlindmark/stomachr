@@ -34,6 +34,14 @@ dat <- lapply(regions, function(r) {
 #> e.g.:
 #>   dat <- vroom(...)
 #>   problems(dat)
+#> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
+#>   input errors. Check raw data.
+#> ℹ 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted
+#>   weight)| > 1.5)
+#> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
+#>   input errors. Check raw data.
+#> ℹ 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted
+#>   weight)| > 1.5)
 ```
 
 We only need
@@ -118,7 +126,7 @@ Below I compare the data coverage in the live version of the new
 database, with the last online version of the old database. The old
 export itself is 131MB, too big to bundle. Instead,
 `data-raw/build_old_db_summary.R` aggregates it down to a
-year/country/ecoregion predator-count summary
+year/country/ecoregion record-count summary
 (`inst/extdata/old_database_summary.csv`) which ships with the package.
 
 The old export uses full country names rather than the ISO codes the new
@@ -187,11 +195,24 @@ Specifically, what I tried, in order:
     codes themselves clearly being shared between the two exports
     (e.g. `"26D4"` appears as a Danish ship code in both).
 
-**Hence, the following plots compares counts of unique predators, not
-individual records.** `diff` is `n_new - n_old`, i.e. the difference in
-how many predators exist for a given year/country/region. A positive bar
-means the new database has *more* predators than the old export for that
-year/country; negative means it has *fewer*.
+**Hence, the following plots compare counts of *records*, not individual
+predators.** Both databases allow a single `PredatorInformation` record
+to represent a pooled group of fish rather than one animal (`Number` in
+the new database, documented by ICES as “Number of specimens taken for
+stomach analyses (pooled samples)” – see
+[`vignette("known-issues", package = "stomachr")`](https://maxlindmark.github.io/stomachr/articles/known-issues.md)).
+The old export has an equivalent field, `Stomach_TotalNo`, but it’s
+entirely unpopulated (`"NULL"` for all 361,023 rows) in this export, so
+pooling on the old side can’t be resolved the same way. Rather than
+reconstruct the new side’s true individual count (possible now via
+[`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md))
+and leave the old side as record counts, this comparison deliberately
+stays at record/sample granularity on **both** sides, so the two numbers
+mean the same thing even though neither is a true count of physical
+fish. `diff` is `n_new - n_old`, i.e. the difference in how many records
+exist for a given year/country/region. A positive bar means the new
+database has *more* records than the old export for that year/country;
+negative means it has *fewer*.
 
 Note that the old export only covers up to 2014. Positive bars from 2015
 onwards just mean the new database has since collected data the old
@@ -207,7 +228,7 @@ range(n_old$year, na.rm = TRUE)
 
 First we look at the total difference in n summed across every country,
 before breaking it down by country and region. Bars smaller than 5
-predators either way are dropped to focus on the meaningful differences.
+records either way are dropped to focus on the meaningful differences.
 
 ``` r
 
@@ -247,7 +268,7 @@ diff_bar <- function(data, subtitle = NULL, facet = NULL) {
     geom_hline(yintercept = 0, linewidth = 0.3) +
     scale_x_continuous(breaks = year_breaks(10)) +
     scale_fill_manual(values = c(`TRUE` = "#3B9AB2", `FALSE` = "#D7191C"), guide = "none") +
-    labs(x = "Year", y = "New database minus\nold database (predators)")
+    labs(x = "Year", y = "New database minus\nold database (records)")
   if (!is.null(facet)) p <- p + facet_wrap(facet, ncol = 3)
   if (!is.null(subtitle)) p <- p + labs(subtitle = subtitle)
   p
@@ -262,7 +283,7 @@ diff_bar_country <- function(data, subtitle = NULL) {
     geom_hline(yintercept = 0, linewidth = 0.3) +
     scale_x_continuous(breaks = year_breaks(10)) +
     scale_fill_brewer(palette = "Dark2") +
-    labs(x = "Year", y = "New database minus\nold database (predators)", fill = "Country") +
+    labs(x = "Year", y = "New database minus\nold database (records)", fill = "Country") +
     theme(legend.position = "bottom")
   if (!is.null(subtitle)) p <- p + labs(subtitle = subtitle)
   p
@@ -330,7 +351,7 @@ for (co in sort(unique(cmp$country))) {
   cat("####", country_name_map[[co]], "\n\n")
   d <- filter(cmp, country == co)
   if (nrow(filter(d, abs(diff) >= 5)) == 0) {
-    cat("No differences of at least 5 predators for any year/region.\n\n")
+    cat("No differences of at least 5 records for any year/region.\n\n")
   } else {
     print(diff_bar(d, subtitle = missing_subtitle(d), facet = "ecoregion"))
   }
@@ -360,7 +381,7 @@ for (co in sort(unique(cmp$country))) {
 
 #### Ireland
 
-No differences of at least 5 predators for any year/region.
+No differences of at least 5 records for any year/region.
 
 #### Latvia
 

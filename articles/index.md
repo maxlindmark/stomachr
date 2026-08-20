@@ -1,9 +1,11 @@
 # Articles
 
-### All vignettes
+### Articles
 
-- [Database
-  overview](https://maxlindmark.github.io/stomachr/articles/database-overview.md):
+- [Workflow](https://maxlindmark.github.io/stomachr/articles/example-workflow.md):
 - [Example
   analysis](https://maxlindmark.github.io/stomachr/articles/example-analysis.md):
-- [Workflow](https://maxlindmark.github.io/stomachr/articles/example-workflow.md):
+- [Known
+  issues](https://maxlindmark.github.io/stomachr/articles/known-issues.md):
+- [Database
+  overview](https://maxlindmark.github.io/stomachr/articles/database-overview.md):

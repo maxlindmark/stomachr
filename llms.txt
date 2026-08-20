@@ -25,7 +25,8 @@ predator-prey mass ratios, and more!
 
 For a full walkthrough of the pipeline and example analyses (diet
 composition, predator–prey mass ratios, temporal trends), a database
-coverage/migration status check, and other guides, see the
+coverage/migration status check, a rundown of known data and
+documentation issues, see the
 [Articles](https://maxlindmark.github.io/stomachr/articles/index.html),
 or locally:
 
@@ -34,6 +35,7 @@ or locally:
 vignette("example-workflow", package = "stomachr")
 vignette("example-analysis", package = "stomachr")
 vignette("database-overview", package = "stomachr")
+vignette("known-issues", package = "stomachr")
 browseVignettes("stomachr")
 ```
 
@@ -109,8 +111,10 @@ to something ready for analysing, are these:
 | Function | Description |
 |----|----|
 | [`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md) | Read and join the four CSVs; classify stomach status; impute any missing coordinates from ICES rectangle midpoints |
-| [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md) | Remove predators with regurgitated stomach contents |
 | [`add_taxonomy()`](https://maxlindmark.github.io/stomachr/reference/add_taxonomy.md) | Join scientific names and higher taxonomy for predators and prey (from the included WoRMS lookup) |
+| [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md) | Resolve records where `Number > 1` (a “predator” is really a pooled group of that many fish) to one row per implied individual (`method = "uncount"`, default) or drop them (`method = "filter"`). Uncount simply replicates that row `Number-regurgitated` times. That’s why it’s important this function is run before [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)! Not all individual predators in a pooled record are regurgitated necessarily. For example: a predator record may have `Number = 10` and `regurgitated = 2` (2 stomachs in the “pool”). If [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md) is run first, the entire record will get lost, since there are regurgitated stomachs. What unpool_predators does it that it copies the record, distributed prey counts (to keep integer values), and divides prey weights by `Number > 1`. This creates pseudo-individuals. If `regurgitated = 2`, the first two pseudoindividuals are removed in [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md). The other option is to use `method = "filter"`. That simply drops records with `Number > 1`. This may be needed in case you want to look at variance etc. But maybe its better to use uncount if spatiotemporal coverage is important (Norway and early Netherlands data are all pooled). Importantly one of these methods has to be used if you want to look at things like stomach fullness or feeding rate. |
+|  |  |
+| [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md) | Remove predators with regurgitated stomach contents |
 | [`impute_size()`](https://maxlindmark.github.io/stomachr/reference/impute_size.md) | Estimate missing prey weight and length via L/W parameters (FishBase¹ for fish, Robinson et al. 2010² for invertebrates) with hierarchical taxonomic fallback; creates the final `predator_weight` column |
 | [`trim_data()`](https://maxlindmark.github.io/stomachr/reference/trim_data.md) | Return only the analysis-ready columns |
 | [`sense_check()`](https://maxlindmark.github.io/stomachr/reference/sense_check.md) | Add a `sense_flag` column marking implausible records (prey longer/heavier than predator, stomach heavier than predator, implausible predator lengths, unknown prey counts) for the user to inspect |
@@ -141,8 +145,9 @@ A full pipeline may look like this:
 ``` r
 
 dat <- join_stomach_data("data/raw") |>
-  drop_invalid() |>
   add_taxonomy()|>
+  unpool_predators() |>
+  drop_invalid() |>
   impute_size() |>
   trim_data() |>
   sense_check() |>
@@ -169,10 +174,12 @@ Association of the United Kingdom*, 90(7), 1375–1388.
 
 - [`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md)
   : Read and join the four ICES stomach content CSVs
-- [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
-  : Drop invalid (regurgitated) predator records
 - [`add_taxonomy()`](https://maxlindmark.github.io/stomachr/reference/add_taxonomy.md)
   : Add WoRMS taxonomy to predator and prey
+- [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
+  : Resolve pooled predator records to one row per predator
+- [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
+  : Drop invalid (regurgitated) predator records
 - [`impute_size()`](https://maxlindmark.github.io/stomachr/reference/impute_size.md)
   : Impute missing prey and predator sizes
 - [`trim_data()`](https://maxlindmark.github.io/stomachr/reference/trim_data.md)
@@ -196,10 +203,12 @@ Association of the United Kingdom*, 90(7), 1375–1388.
 
 # Articles
 
-### All vignettes
+### Articles
 
-- [Database
-  overview](https://maxlindmark.github.io/stomachr/articles/database-overview.md):
+- [Workflow](https://maxlindmark.github.io/stomachr/articles/example-workflow.md):
 - [Example
   analysis](https://maxlindmark.github.io/stomachr/articles/example-analysis.md):
-- [Workflow](https://maxlindmark.github.io/stomachr/articles/example-workflow.md):
+- [Known
+  issues](https://maxlindmark.github.io/stomachr/articles/known-issues.md):
+- [Database
+  overview](https://maxlindmark.github.io/stomachr/articles/database-overview.md):

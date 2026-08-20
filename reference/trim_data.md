@@ -29,4 +29,8 @@ A tibble with columns: `tbl_upload_id`, `tbl_haul_id`,
 `prey_family`, `digestion_stage`, `sub_factor`, `count`,
 `count_censored`, `prey_length`, `prey_weight_ind`,
 `prey_weight_all_ind`, `other_wgt`, `prey_lw_source`, `lw_source`,
-`pred_lw_source`, `analysing_org`.
+`pred_lw_source`, `analysing_org`. Also includes `number` and `unpooled`
+if
+[`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
+was called upstream (they're not guaranteed columns – omitted entirely
+if that step was skipped).

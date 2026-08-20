@@ -37,14 +37,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/database-overview.html">Database overview</a></li>
-    <li><a class="dropdown-item" href="articles/example-analysis.html">Example analysis</a></li>
-    <li><a class="dropdown-item" href="articles/example-workflow.html">Workflow</a></li>
-  </ul>
-</li>
+<li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
@@ -73,11 +66,12 @@
 <p>stomachr is a package that downloads <a href="https://stomachdata.ices.dk/inventory" class="external-link">ICES stomach content data</a> and provides tools for merging, enriching, imputing, trimming, quality-checking and filtering stomach data from the ICES stomach database. It’s meant to complement the <a href="https://github.com/MortenVinther/FishStomachs" class="external-link">FishStomachs R package</a>, by working directly from the new ICES stomach database and the new format, as well as focusing more the actual data preparation and general use, rather then preparing aggregated stomachs for the SMS model.</p>
 <p>The idea is to lower the threshold to get started with analyzing stomach content data (which can be overwhelming to work with) by presenting a structured and reproducible workflow. Inspired by <a href="https://github.com/elbersb/tidylog" class="external-link">tidylog</a>, it prints clean summaries of each operation, and flags unusual observations so that you easily get an overview of what happens in all processing scripts.</p>
 <p>The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more!</p>
-<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the <a href="https://maxlindmark.github.io/stomachr/articles/index.html">Articles</a>, or locally:</p>
+<p>For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, a rundown of known data and documentation issues, see the <a href="https://maxlindmark.github.io/stomachr/articles/index.html">Articles</a>, or locally:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-workflow"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"example-analysis"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"database-overview"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"known-issues"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"stomachr"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -176,12 +170,20 @@
 <td>Read and join the four CSVs; classify stomach status; impute any missing coordinates from ICES rectangle midpoints</td>
 </tr>
 <tr>
-<td><code><a href="reference/drop_invalid.html">drop_invalid()</a></code></td>
-<td>Remove predators with regurgitated stomach contents</td>
-</tr>
-<tr>
 <td><code><a href="reference/add_taxonomy.html">add_taxonomy()</a></code></td>
 <td>Join scientific names and higher taxonomy for predators and prey (from the included WoRMS lookup)</td>
+</tr>
+<tr>
+<td><code><a href="reference/unpool_predators.html">unpool_predators()</a></code></td>
+<td>Resolve records where <code>Number &gt; 1</code> (a “predator” is really a pooled group of that many fish) to one row per implied individual (<code>method = "uncount"</code>, default) or drop them (<code>method = "filter"</code>). Uncount simply replicates that row <code>Number-regurgitated</code> times. That’s why it’s important this function is run before <code><a href="reference/drop_invalid.html">drop_invalid()</a></code>! Not all individual predators in a pooled record are regurgitated necessarily. For example: a predator record may have <code>Number = 10</code> and <code>regurgitated = 2</code> (2 stomachs in the “pool”). If <code><a href="reference/drop_invalid.html">drop_invalid()</a></code> is run first, the entire record will get lost, since there are regurgitated stomachs. What unpool_predators does it that it copies the record, distributed prey counts (to keep integer values), and divides prey weights by <code>Number &gt; 1</code>. This creates pseudo-individuals. If <code>regurgitated = 2</code>, the first two pseudoindividuals are removed in <code><a href="reference/drop_invalid.html">drop_invalid()</a></code>. The other option is to use <code>method = "filter"</code>. That simply drops records with <code>Number &gt; 1</code>. This may be needed in case you want to look at variance etc. But maybe its better to use uncount if spatiotemporal coverage is important (Norway and early Netherlands data are all pooled). Importantly one of these methods has to be used if you want to look at things like stomach fullness or feeding rate.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code><a href="reference/drop_invalid.html">drop_invalid()</a></code></td>
+<td>Remove predators with regurgitated stomach contents</td>
 </tr>
 <tr>
 <td><code><a href="reference/impute_size.html">impute_size()</a></code></td>
@@ -252,8 +254,9 @@
 <p>A full pipeline may look like this:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/join_stomach_data.html">join_stomach_data</a></span><span class="op">(</span><span class="st">"data/raw"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="op">)</span><span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/unpool_predators.html">unpool_predators</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/impute_size.html">impute_size</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/trim_data.html">trim_data</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sense_check.html">sense_check</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>

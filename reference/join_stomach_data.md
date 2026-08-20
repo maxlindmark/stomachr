@@ -5,7 +5,13 @@ Reads `File_information.csv`, `HaulInformation.csv`,
 them into a single flat tibble, classifies each stomach as `"food"`,
 `"empty"`, or `"unidentified"`, deduplicates exact-duplicate prey rows,
 and optionally imputes missing coordinates from ICES rectangle
-midpoints.
+midpoints. Also warns if any predator's raw `Length`/`IndWgt` is wildly
+inconsistent with an isometric length-weight curve (`W = 0.01 * L^3`), a
+sign of a unit error (e.g. length in mm instead of cm), and if any
+predator's `Number` is `<= 0` (not a valid pooled-sample count) –
+neither check fixes anything, both are raw-data sanity checks – see
+[`vignette("known-issues", package = "stomachr")`](https://maxlindmark.github.io/stomachr/articles/known-issues.md)
+for worked examples of what these have caught in the live database.
 
 ## Usage
 

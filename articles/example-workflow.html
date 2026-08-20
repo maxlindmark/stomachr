@@ -34,14 +34,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/database-overview.html">Database overview</a></li>
-    <li><a class="dropdown-item" href="../articles/example-analysis.html">Example analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/example-workflow.html">Workflow</a></li>
-  </ul>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
@@ -120,32 +113,54 @@ yourself. They were produced with, seen <a href="https://github.com/maxlindmark/
 <p>The next step is to join the four CSVs. This means attaching haul and
 file metadata to predators, classifying each stomach as
 <code>"food"</code>, <code>"empty"</code>, or
-<code>"unidentified"</code>, deduplicates exact-duplicate prey rows
-(present in some national submissions), converts prey length from mm to
-cm, handles the count sentinel value (9999 = unknown multiplicity), and
-optionally imputes missing coordinates from ICES rectangle midpoints
-(defaults to <code>"food"</code>).</p>
+<code>"unidentified"</code>, and optionally imputes missing coordinates
+from ICES rectangle midpoints (defaults to <code>"food"</code>).</p>
 <p><span style="color:red;"><strong>Known country-specific unit
 issues</strong> (currently requires manual correction before
-proceeding):</span></p>
-<p>There is no predator length or weight unit in the data (only for
-prey). We want cm and grams.</p>
+proceeding). All five fixes below are worked examples in the <a href="https://maxlindmark.github.io/stomachr/articles/known-issues.html">known
+issues vignette</a>
+(<code><a href="../articles/known-issues.html">vignette("known-issues", package = "stomachr")</a></code>
+locally).</span></p>
 <ul>
 <li>Belgium (<code>BE</code>): <code>pred_length</code> is in mm –
 divide by 10</li>
 <li>Denmark (<code>DK</code>): <code>ind_wgt</code> is in kg – multiply
 by 1000</li>
+<li>Sweden, one upload (<code>tbl_upload_id == "8337"</code>, cod,
+Baltic Sea): <code>pred_length</code> is in mm – divide by 10 (not a
+country-wide issue like the two above – Sweden’s other uploads are
+fine)</li>
+<li>Same Sweden upload: uses a legacy <code>regurgitated</code> code
+confirmed by ICES stomach analysts (<code>1</code> = intact,
+<code>2</code> = regurgitated, instead of the usual
+<code>0</code>/<code>NA</code> = not regurgitated, <code>1</code> =
+regurgitated) – shift it by <code>-1</code> before
+<code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>, or it wrongly discards good records</li>
+<li>Norway (<code>NO</code>): <code>number</code> is populated above
+<code>1</code> on many records despite each one being a single
+individually-measured fish (own <code>Length</code>, own
+<code>IndWgt</code>, <code>Regurgitated</code>/<code>StomachEmpty</code>
+capped at 0/1, prey-weight ratios that get <em>worse</em> when divided
+by <code>Number</code>) – treated as a data-entry error, not real
+pooling; force it to <code>1</code>
+</li>
 </ul>
-<p><strong>Known data-quality issue, handled automatically:</strong>
-some submissions (seen in Celtic Seas data) have corrupt
-<code>ICESrectangle</code> codes (e.g. <code>"46E9"</code> stored as
-<code>"46000000000"</code>, as if Excel read it as scientific notation).
-<code><a href="../reference/join_stomach_data.html">join_stomach_data()</a></code> detects codes that don’t match the real
-<code>##L#</code> format and recomputes them from
+<p>These things are not fixed internally in the join function, in case
+the database gets corrected.</p>
+<p>This following error is though corrected internally, because ices
+rectangle is filled in. Some submissions (seen in Celtic Seas data) have
+corrupt <code>ICESrectangle</code> codes (e.g. <code>"46E9"</code>
+stored as <code>"46000000000"</code>, as if Excel read it as scientific
+notation). <code><a href="../reference/join_stomach_data.html">join_stomach_data()</a></code> detects codes that don’t
+match the real <code>##L#</code> format and recomputes them from
 <code>ShootLat</code>/<code>ShootLong</code>. How many rows were
 affected are printed by the function.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/join_stomach_data.html">join_stomach_data</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
+<span><span class="co">#&gt;   input errors. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 2,705 of 8,886 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 8,886 predator individuals</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> 3,845 (43.3%) with identifiable prey</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,084 (46.0%) empty or regurgitated</span></span>
@@ -157,19 +172,67 @@ affected are printed by the function.</p>
 <span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    pred_length <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">country</span> <span class="op">==</span> <span class="st">"BE"</span>, <span class="va">pred_length</span> <span class="op">/</span> <span class="fl">10</span>, <span class="va">pred_length</span><span class="op">)</span>,</span>
-<span>    ind_wgt     <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">country</span> <span class="op">==</span> <span class="st">"DK"</span>, <span class="va">ind_wgt</span> <span class="op">*</span> <span class="fl">1000</span>, <span class="va">ind_wgt</span><span class="op">)</span></span>
+<span>    pred_length  <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">country</span> <span class="op">==</span> <span class="st">"BE"</span> <span class="op">|</span> <span class="va">tbl_upload_id</span> <span class="op">==</span> <span class="st">"8337"</span>, <span class="va">pred_length</span> <span class="op">/</span> <span class="fl">10</span>, <span class="va">pred_length</span><span class="op">)</span>,</span>
+<span>    ind_wgt      <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">country</span> <span class="op">==</span> <span class="st">"DK"</span>, <span class="va">ind_wgt</span> <span class="op">*</span> <span class="fl">1000</span>, <span class="va">ind_wgt</span><span class="op">)</span>,</span>
+<span>    regurgitated <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">tbl_upload_id</span> <span class="op">==</span> <span class="st">"8337"</span>, <span class="va">regurgitated</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">regurgitated</span><span class="op">)</span>,</span>
+<span>    number       <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">country</span> <span class="op">==</span> <span class="st">"NO"</span>, <span class="fl">1</span>, <span class="va">number</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="step-3-drop_invalid">Step 3: <code>drop_invalid()</code><a class="anchor" aria-label="anchor" href="#step-3-drop_invalid"></a>
+<h3 id="step-3-add_taxonomy">Step 3: <code>add_taxonomy()</code><a class="anchor" aria-label="anchor" href="#step-3-add_taxonomy"></a>
+</h3>
+<p>Joins scientific names and higher taxonomy (class, order, family,
+phylum) for both predators and prey from the internal WoRMS lookup. Prey
+with <code>aphia_id_prey = NA</code> in non-empty stomachs are labelled
+<code>"Unknown"</code> so their weight is not silently lost.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">add_taxonomy()</span>: WoRMS names resolved</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Predator AphiaIDs: 23 unique, 0 unresolved</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Prey AphiaIDs: 254 unique, 3 unresolved</span></span>
+<span><span class="co">#&gt; </span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-4-unpool_predators">Step 4: <code>unpool_predators()</code><a class="anchor" aria-label="anchor" href="#step-4-unpool_predators"></a>
+</h3>
+<p>Some <code>PredatorInformation</code> records have
+<code>Number &gt; 1</code>: not one fish, but a pooled group of that
+many (<a href="https://datsu.ices.dk/web/selRep.aspx?Dataset=157" class="external-link">file
+format documentation</a>: “Number of specimens taken for stomach
+analyses (pooled samples)”. If you want to look at prey weigths in
+stomachs, e.g. for feeding rates, it’s important that they are filtered
+or expanded, so that 1 row = 1 individual predator.</p>
+<ul>
+<li>
+<code>method = "uncount"</code> (default): expands each pooled
+record into <code>Number</code> rows (one pseudo-individual per implied
+fish), distributing
+<code>count</code>/<code>weight</code>/<code>regurgitated</code> so they
+sum back to the original totals (Example: for
+<code>Number = 10, Regurgitated = 3</code>, 3 of the 10 copies get
+<code>regurgitated = 1</code>, so <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code> below
+drops exactly those 3, not all 10 or none). Note, these aren’t
+independent observations, so treat them accordingly for anything
+computing per-individual variance.</li>
+<li>
+<code>method = "filter"</code>: drops <code>Number &gt; 1</code>
+records outright instead.</li>
+</ul>
+<p>This has to run before <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>, not after –
+otherwise a partially-regurgitated pooled group gets dropped (or kept)
+as a whole before it can be resolved per implied individual.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpool_predators.html">unpool_predators</a></span><span class="op">(</span><span class="va">dat</span>, method <span class="op">=</span> <span class="st">"uncount"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-5-drop_invalid">Step 5: <code>drop_invalid()</code><a class="anchor" aria-label="anchor" href="#step-5-drop_invalid"></a>
 </h3>
 <p>Removes predators with <code>regurgitated &gt;= 1</code>. Stomach
-contents of regurgitated fish are techically not usable. The
+contents of regurgitated fish are not really usable. The
 <code>na_regurgitated</code> argument controls whether <code>NA</code>
 values are treated as not regurgitated (<code>"keep"</code>, default) or
 regurgitated (<code>"drop"</code>).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="va">dat</span>, na_regurgitated <span class="op">=</span> <span class="st">"keep"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">drop_invalid()</span>: 8,886 -&gt; 8,559 predators (327 dropped, 3.7%)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated value &gt;= 1 assumed regurgitated</span></span>
@@ -184,21 +247,7 @@ regurgitated (<code>"drop"</code>).</p>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="step-4-add_taxonomy">Step 4: <code>add_taxonomy()</code><a class="anchor" aria-label="anchor" href="#step-4-add_taxonomy"></a>
-</h3>
-<p>Joins scientific names and higher taxonomy (class, order, family,
-phylum) for both predators and prey from the internal WoRMS lookup. Prey
-with <code>aphia_id_prey = NA</code> in non-empty stomachs are labelled
-<code>"Unknown"</code> so their weight is not silently lost.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">add_taxonomy()</span>: WoRMS names resolved</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Predator AphiaIDs: 23 unique, 0 unresolved</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Prey AphiaIDs: 254 unique, 3 unresolved</span></span>
-<span><span class="co">#&gt; </span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="step-5-impute_size">Step 5: <code>impute_size()</code><a class="anchor" aria-label="anchor" href="#step-5-impute_size"></a>
+<h3 id="step-6-impute_size">Step 6: <code>impute_size()</code><a class="anchor" aria-label="anchor" href="#step-6-impute_size"></a>
 </h3>
 <p>Estimates missing prey weight and/or length via L/W parameters or
 observed means, and estimates missing predator weight from length. Also
@@ -225,7 +274,7 @@ other records of the same species</li>
 with no recorded size borrow from other records of the same species
 before applying L/W</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/impute_size.html">impute_size</a></span><span class="op">(</span><span class="va">dat</span>, which <span class="op">=</span> <span class="st">"both"</span>, method <span class="op">=</span> <span class="st">"lw_params"</span>, size <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">impute_size()</span>: which = <span style="color: #0000BB;">"both"</span> | method = <span style="color: #0000BB;">"lw_params"</span> | size = <span style="color: #0000BB;">"both"</span> |</span></span>
 <span><span class="co">#&gt; fill_if_no_size = <span style="color: #0000BB;">TRUE</span></span></span>
@@ -249,30 +298,29 @@ before applying L/W</li>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="step-6-trim_data">Step 6: <code>trim_data()</code><a class="anchor" aria-label="anchor" href="#step-6-trim_data"></a>
+<h3 id="step-7-trim_data">Step 7: <code>trim_data()</code><a class="anchor" aria-label="anchor" href="#step-7-trim_data"></a>
 </h3>
 <p>Returns only the analysis-ready columns.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trim_data.html">trim_data</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">trim_data()</span>: dropped 33 columns:</span></span>
-<span><span class="co">#&gt;   ship, gear, haul_no, station_number, fish_id, ind_wgt, number,</span></span>
-<span><span class="co">#&gt;   measurement_increment, code, maturity_scale, maturity_stage,</span></span>
-<span><span class="co">#&gt;   preservation_method, stomach_fullness, full_stom_wgt, empty_stom_wgt,</span></span>
-<span><span class="co">#&gt;   stomach_empty, gen_samp, notes, ident_met, grav_method, prey_sequence,</span></span>
-<span><span class="co">#&gt;   unit_wgt, weight, unit_lngt, other_items, other_count, predator_rank,</span></span>
-<span><span class="co">#&gt;   predator_phylum, predator_genus, prey_rank, prey_phylum, prey_genus,</span></span>
-<span><span class="co">#&gt;   ind_weight_est</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">trim_data()</span>: dropped 32 columns:</span></span>
+<span><span class="co">#&gt;   ship, gear, haul_no, station_number, fish_id, ind_wgt, measurement_increment,</span></span>
+<span><span class="co">#&gt;   code, maturity_scale, maturity_stage, preservation_method, stomach_fullness,</span></span>
+<span><span class="co">#&gt;   full_stom_wgt, empty_stom_wgt, stomach_empty, gen_samp, notes, ident_met,</span></span>
+<span><span class="co">#&gt;   grav_method, prey_sequence, unit_wgt, weight, unit_lngt, other_items,</span></span>
+<span><span class="co">#&gt;   other_count, predator_rank, predator_phylum, predator_genus, prey_rank,</span></span>
+<span><span class="co">#&gt;   prey_phylum, prey_genus, ind_weight_est</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="steps-78-sense_check-and-drop_flagged">Steps 7–8: <code>sense_check()</code> and
-<code>drop_flagged()</code><a class="anchor" aria-label="anchor" href="#steps-78-sense_check-and-drop_flagged"></a>
+<h3 id="steps-89-sense_check-and-drop_flagged">Steps 8–9: <code>sense_check()</code> and
+<code>drop_flagged()</code><a class="anchor" aria-label="anchor" href="#steps-89-sense_check-and-drop_flagged"></a>
 </h3>
 <p><code><a href="../reference/sense_check.html">sense_check()</a></code> adds a <code>sense_flag</code> column
 marking implausible records. <code><a href="../reference/drop_flagged.html">drop_flagged()</a></code> removes them.
 You can inspect flagged records before dropping by examining
 <code>tbl_predator_information_id</code> in the raw data.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sense_check.html">sense_check</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">sense_check()</span>: 13,935 rows</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> prey longer than predator (same unit assumed): 1 row (0.0%) across 1 predator</span></span>

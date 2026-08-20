@@ -34,14 +34,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/database-overview.html">Database overview</a></li>
-    <li><a class="dropdown-item" href="../articles/example-analysis.html">Example analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/example-workflow.html">Workflow</a></li>
-  </ul>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
@@ -101,7 +94,15 @@ Arctic drift expedition), are not used.</p>
 <span><span class="co">#&gt; Warning: One or more parsing issues, call `problems()` on your data frame for details,</span></span>
 <span><span class="co">#&gt; e.g.:</span></span>
 <span><span class="co">#&gt;   dat &lt;- vroom(...)</span></span>
-<span><span class="co">#&gt;   problems(dat)</span></span></code></pre></div>
+<span><span class="co">#&gt;   problems(dat)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
+<span><span class="co">#&gt;   input errors. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
+<span><span class="co">#&gt;   input errors. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span></code></pre></div>
 <p>We only need <code><a href="../reference/join_stomach_data.html">join_stomach_data()</a></code> here (year, country,
 and coordinates are already attached to every predator, and we’re
 looking at database coverage rather than diet composition). We also
@@ -175,7 +176,7 @@ in the new format</strong>.</p>
 database, with the last online version of the old database. The old
 export itself is 131MB, too big to bundle. Instead,
 <code>data-raw/build_old_db_summary.R</code> aggregates it down to a
-year/country/ecoregion predator-count summary
+year/country/ecoregion record-count summary
 (<code>inst/extdata/old_database_summary.csv</code>) which ships with
 the package.</p>
 <p>The old export uses full country names rather than the ISO codes the
@@ -244,12 +245,25 @@ haul-events, despite ship codes themselves clearly being shared between
 the two exports (e.g. <code>"26D4"</code> appears as a Danish ship code
 in both).</p></li>
 </ol>
-<p><strong>Hence, the following plots compares counts of unique
-predators, not individual records.</strong> <code>diff</code> is
-<code>n_new - n_old</code>, i.e. the difference in how many predators
-exist for a given year/country/region. A positive bar means the new
-database has <em>more</em> predators than the old export for that
-year/country; negative means it has <em>fewer</em>.</p>
+<p><strong>Hence, the following plots compare counts of
+<em>records</em>, not individual predators.</strong> Both databases
+allow a single <code>PredatorInformation</code> record to represent a
+pooled group of fish rather than one animal (<code>Number</code> in the
+new database, documented by ICES as “Number of specimens taken for
+stomach analyses (pooled samples)” – see
+<code><a href="../articles/known-issues.html">vignette("known-issues", package = "stomachr")</a></code>). The old
+export has an equivalent field, <code>Stomach_TotalNo</code>, but it’s
+entirely unpopulated (<code>"NULL"</code> for all 361,023 rows) in this
+export, so pooling on the old side can’t be resolved the same way.
+Rather than reconstruct the new side’s true individual count (possible
+now via <code><a href="../reference/unpool_predators.html">unpool_predators()</a></code>) and leave the old side as
+record counts, this comparison deliberately stays at record/sample
+granularity on <strong>both</strong> sides, so the two numbers mean the
+same thing even though neither is a true count of physical fish.
+<code>diff</code> is <code>n_new - n_old</code>, i.e. the difference in
+how many records exist for a given year/country/region. A positive bar
+means the new database has <em>more</em> records than the old export for
+that year/country; negative means it has <em>fewer</em>.</p>
 <p>Note that the old export only covers up to 2014. Positive bars from
 2015 onwards just mean the new database has since collected data the old
 database never have had.</p>
@@ -261,7 +275,7 @@ database never have had.</p>
 </h3>
 <p>First we look at the total difference in n summed across every
 country, before breaking it down by country and region. Bars smaller
-than 5 predators either way are dropped to focus on the meaningful
+than 5 records either way are dropped to focus on the meaningful
 differences.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">year_breaks</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">{</span></span>
@@ -300,7 +314,7 @@ differences.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu">year_breaks</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>`TRUE` <span class="op">=</span> <span class="st">"#3B9AB2"</span>, `FALSE` <span class="op">=</span> <span class="st">"#D7191C"</span><span class="op">)</span>, guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"New database minus\nold database (predators)"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"New database minus\nold database (records)"</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">facet</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">facet</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">subtitle</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="va">subtitle</span><span class="op">)</span></span>
 <span>  <span class="va">p</span></span>
@@ -315,7 +329,7 @@ differences.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu">year_breaks</span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Dark2"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"New database minus\nold database (predators)"</span>, fill <span class="op">=</span> <span class="st">"Country"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Year"</span>, y <span class="op">=</span> <span class="st">"New database minus\nold database (records)"</span>, fill <span class="op">=</span> <span class="st">"Country"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">subtitle</span><span class="op">)</span><span class="op">)</span> <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="va">subtitle</span><span class="op">)</span></span>
 <span>  <span class="va">p</span></span>
@@ -378,7 +392,7 @@ further. Note the the Celtic Seas are not resolved here!</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"####"</span>, <span class="va">country_name_map</span><span class="op">[[</span><span class="va">co</span><span class="op">]</span><span class="op">]</span>, <span class="st">"\n\n"</span><span class="op">)</span></span>
 <span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cmp</span>, <span class="va">country</span> <span class="op">==</span> <span class="va">co</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">diff</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"No differences of at least 5 predators for any year/region.\n\n"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"No differences of at least 5 records for any year/region.\n\n"</span><span class="op">)</span></span>
 <span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">diff_bar</span><span class="op">(</span><span class="va">d</span>, subtitle <span class="op">=</span> <span class="fu">missing_subtitle</span><span class="op">(</span><span class="va">d</span><span class="op">)</span>, facet <span class="op">=</span> <span class="st">"ecoregion"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
@@ -412,7 +426,7 @@ further. Note the the Celtic Seas are not resolved here!</p>
 <div class="section level4">
 <h4 id="ireland">Ireland<a class="anchor" aria-label="anchor" href="#ireland"></a>
 </h4>
-<p>No differences of at least 5 predators for any year/region.</p>
+<p>No differences of at least 5 records for any year/region.</p>
 </div>
 <div class="section level4">
 <h4 id="latvia">Latvia<a class="anchor" aria-label="anchor" href="#latvia"></a>

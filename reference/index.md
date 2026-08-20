@@ -9,10 +9,12 @@
 
 - [`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md)
   : Read and join the four ICES stomach content CSVs
-- [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
-  : Drop invalid (regurgitated) predator records
 - [`add_taxonomy()`](https://maxlindmark.github.io/stomachr/reference/add_taxonomy.md)
   : Add WoRMS taxonomy to predator and prey
+- [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
+  : Resolve pooled predator records to one row per predator
+- [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
+  : Drop invalid (regurgitated) predator records
 - [`impute_size()`](https://maxlindmark.github.io/stomachr/reference/impute_size.md)
   : Impute missing prey and predator sizes
 - [`trim_data()`](https://maxlindmark.github.io/stomachr/reference/trim_data.md)

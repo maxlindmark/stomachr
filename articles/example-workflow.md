@@ -61,25 +61,40 @@ path <- system.file("extdata", package = "stomachr")
 
 The next step is to join the four CSVs. This means attaching haul and
 file metadata to predators, classifying each stomach as `"food"`,
-`"empty"`, or `"unidentified"`, deduplicates exact-duplicate prey rows
-(present in some national submissions), converts prey length from mm to
-cm, handles the count sentinel value (9999 = unknown multiplicity), and
-optionally imputes missing coordinates from ICES rectangle midpoints
-(defaults to `"food"`).
+`"empty"`, or `"unidentified"`, and optionally imputes missing
+coordinates from ICES rectangle midpoints (defaults to `"food"`).
 
 **Known country-specific unit issues** (currently requires manual
-correction before proceeding):
-
-There is no predator length or weight unit in the data (only for prey).
-We want cm and grams.
+correction before proceeding). All five fixes below are worked examples
+in the [known issues
+vignette](https://maxlindmark.github.io/stomachr/articles/known-issues.html)
+([`vignette("known-issues", package = "stomachr")`](https://maxlindmark.github.io/stomachr/articles/known-issues.md)
+locally).
 
 - Belgium (`BE`): `pred_length` is in mm – divide by 10
 - Denmark (`DK`): `ind_wgt` is in kg – multiply by 1000
+- Sweden, one upload (`tbl_upload_id == "8337"`, cod, Baltic Sea):
+  `pred_length` is in mm – divide by 10 (not a country-wide issue like
+  the two above – Sweden’s other uploads are fine)
+- Same Sweden upload: uses a legacy `regurgitated` code confirmed by
+  ICES stomach analysts (`1` = intact, `2` = regurgitated, instead of
+  the usual `0`/`NA` = not regurgitated, `1` = regurgitated) – shift it
+  by `-1` before
+  [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md),
+  or it wrongly discards good records
+- Norway (`NO`): `number` is populated above `1` on many records despite
+  each one being a single individually-measured fish (own `Length`, own
+  `IndWgt`, `Regurgitated`/`StomachEmpty` capped at 0/1, prey-weight
+  ratios that get *worse* when divided by `Number`) – treated as a
+  data-entry error, not real pooling; force it to `1`
 
-**Known data-quality issue, handled automatically:** some submissions
-(seen in Celtic Seas data) have corrupt `ICESrectangle` codes
-(e.g. `"46E9"` stored as `"46000000000"`, as if Excel read it as
-scientific notation).
+These things are not fixed internally in the join function, in case the
+database gets corrected.
+
+This following error is though corrected internally, because ices
+rectangle is filled in. Some submissions (seen in Celtic Seas data) have
+corrupt `ICESrectangle` codes (e.g. `"46E9"` stored as `"46000000000"`,
+as if Excel read it as scientific notation).
 [`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md)
 detects codes that don’t match the real `##L#` format and recomputes
 them from `ShootLat`/`ShootLong`. How many rows were affected are
@@ -88,6 +103,10 @@ printed by the function.
 ``` r
 
 dat <- join_stomach_data(path)
+#> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
+#>   input errors. Check raw data.
+#> ℹ 2,705 of 8,886 predator record flagged (|log10(observed weight / predicted
+#>   weight)| > 1.5)
 #> join_stomach_data(): 8,886 predator individuals
 #> ✔ 3,845 (43.3%) with identifiable prey
 #> ℹ 4,084 (46.0%) empty or regurgitated
@@ -99,17 +118,66 @@ dat <- join_stomach_data(path)
 
 dat <- dat |>
   dplyr::mutate(
-    pred_length = dplyr::if_else(country == "BE", pred_length / 10, pred_length),
-    ind_wgt     = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt)
+    pred_length  = dplyr::if_else(country == "BE" | tbl_upload_id == "8337", pred_length / 10, pred_length),
+    ind_wgt      = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt),
+    regurgitated = dplyr::if_else(tbl_upload_id == "8337", regurgitated - 1, regurgitated),
+    number       = dplyr::if_else(country == "NO", 1, number)
   )
 ```
 
-### Step 3: `drop_invalid()`
+### Step 3: `add_taxonomy()`
+
+Joins scientific names and higher taxonomy (class, order, family,
+phylum) for both predators and prey from the internal WoRMS lookup. Prey
+with `aphia_id_prey = NA` in non-empty stomachs are labelled `"Unknown"`
+so their weight is not silently lost.
+
+``` r
+
+dat <- add_taxonomy(dat)
+#> add_taxonomy(): WoRMS names resolved
+#> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
+#> ! Prey AphiaIDs: 254 unique, 3 unresolved
+#> 
+```
+
+### Step 4: `unpool_predators()`
+
+Some `PredatorInformation` records have `Number > 1`: not one fish, but
+a pooled group of that many ([file format
+documentation](https://datsu.ices.dk/web/selRep.aspx?Dataset=157):
+“Number of specimens taken for stomach analyses (pooled samples)”. If
+you want to look at prey weigths in stomachs, e.g. for feeding rates,
+it’s important that they are filtered or expanded, so that 1 row = 1
+individual predator.
+
+- `method = "uncount"` (default): expands each pooled record into
+  `Number` rows (one pseudo-individual per implied fish), distributing
+  `count`/`weight`/`regurgitated` so they sum back to the original
+  totals (Example: for `Number = 10, Regurgitated = 3`, 3 of the 10
+  copies get `regurgitated = 1`, so
+  [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
+  below drops exactly those 3, not all 10 or none). Note, these aren’t
+  independent observations, so treat them accordingly for anything
+  computing per-individual variance.
+- `method = "filter"`: drops `Number > 1` records outright instead.
+
+This has to run before
+[`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md),
+not after – otherwise a partially-regurgitated pooled group gets dropped
+(or kept) as a whole before it can be resolved per implied individual.
+
+``` r
+
+dat <- unpool_predators(dat, method = "uncount")
+```
+
+### Step 5: `drop_invalid()`
 
 Removes predators with `regurgitated >= 1`. Stomach contents of
-regurgitated fish are techically not usable. The `na_regurgitated`
-argument controls whether `NA` values are treated as not regurgitated
-(`"keep"`, default) or regurgitated (`"drop"`).
+regurgitated fish are not really usable. The `na_regurgitated` argument
+controls whether `NA` values are treated as not regurgitated (`"keep"`,
+default) or regurgitated (`"drop"`).
 
 ``` r
 
@@ -127,23 +195,7 @@ dat <- drop_invalid(dat, na_regurgitated = "keep")
 #> 
 ```
 
-### Step 4: `add_taxonomy()`
-
-Joins scientific names and higher taxonomy (class, order, family,
-phylum) for both predators and prey from the internal WoRMS lookup. Prey
-with `aphia_id_prey = NA` in non-empty stomachs are labelled `"Unknown"`
-so their weight is not silently lost.
-
-``` r
-
-dat <- add_taxonomy(dat)
-#> add_taxonomy(): WoRMS names resolved
-#> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
-#> ! Prey AphiaIDs: 254 unique, 3 unresolved
-#> 
-```
-
-### Step 5: `impute_size()`
+### Step 6: `impute_size()`
 
 Estimates missing prey weight and/or length via L/W parameters or
 observed means, and estimates missing predator weight from length. Also
@@ -189,25 +241,24 @@ dat <- impute_size(dat, which = "both", method = "lw_params", size = "both")
 #> 
 ```
 
-### Step 6: `trim_data()`
+### Step 7: `trim_data()`
 
 Returns only the analysis-ready columns.
 
 ``` r
 
 dat <- trim_data(dat)
-#> trim_data(): dropped 33 columns:
-#>   ship, gear, haul_no, station_number, fish_id, ind_wgt, number,
-#>   measurement_increment, code, maturity_scale, maturity_stage,
-#>   preservation_method, stomach_fullness, full_stom_wgt, empty_stom_wgt,
-#>   stomach_empty, gen_samp, notes, ident_met, grav_method, prey_sequence,
-#>   unit_wgt, weight, unit_lngt, other_items, other_count, predator_rank,
-#>   predator_phylum, predator_genus, prey_rank, prey_phylum, prey_genus,
-#>   ind_weight_est
+#> trim_data(): dropped 32 columns:
+#>   ship, gear, haul_no, station_number, fish_id, ind_wgt, measurement_increment,
+#>   code, maturity_scale, maturity_stage, preservation_method, stomach_fullness,
+#>   full_stom_wgt, empty_stom_wgt, stomach_empty, gen_samp, notes, ident_met,
+#>   grav_method, prey_sequence, unit_wgt, weight, unit_lngt, other_items,
+#>   other_count, predator_rank, predator_phylum, predator_genus, prey_rank,
+#>   prey_phylum, prey_genus, ind_weight_est
 #> 
 ```
 
-### Steps 7–8: `sense_check()` and `drop_flagged()`
+### Steps 8–9: `sense_check()` and `drop_flagged()`
 
 [`sense_check()`](https://maxlindmark.github.io/stomachr/reference/sense_check.md)
 adds a `sense_flag` column marking implausible records.
