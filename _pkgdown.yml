@@ -6,6 +6,14 @@ navbar:
   structure:
     left: [articles, reference, news]
 
+articles:
+  - title: Articles
+    contents:
+      - example-workflow
+      - example-analysis
+      - known-issues
+      - database-overview
+
 reference:
   - title: Download
     contents:
@@ -13,8 +21,9 @@ reference:
   - title: Cleaning pipeline
     contents:
       - join_stomach_data
-      - drop_invalid
       - add_taxonomy
+      - unpool_predators
+      - drop_invalid
       - impute_size
       - trim_data
       - sense_check

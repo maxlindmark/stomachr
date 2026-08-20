@@ -13,12 +13,13 @@ The idea is to lower the threshold to get started with analyzing stomach content
 
 The full pipeline produces a single tibble, with one row per prey record per predator, suitable for analysis of diet composition, food levels, predator-prey mass ratios, and more!
 
-For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, and other guides, see the [Articles](https://maxlindmark.github.io/stomachr/articles/index.html), or locally:
+For a full walkthrough of the pipeline and example analyses (diet composition, predator–prey mass ratios, temporal trends), a database coverage/migration status check, a rundown of known data and documentation issues, see the [Articles](https://maxlindmark.github.io/stomachr/articles/index.html), or locally:
 
 ```r
 vignette("example-workflow", package = "stomachr")
 vignette("example-analysis", package = "stomachr")
 vignette("database-overview", package = "stomachr")
+vignette("known-issues", package = "stomachr")
 browseVignettes("stomachr")
 ```
 
@@ -82,8 +83,10 @@ The key functions of this package, which takes you from the four raw csv to some
 | Function | Description |
 |---|---|
 | `join_stomach_data()` | Read and join the four CSVs; classify stomach status; impute any missing coordinates from ICES rectangle midpoints |
-| `drop_invalid()` | Remove predators with regurgitated stomach contents |
 | `add_taxonomy()` | Join scientific names and higher taxonomy for predators and prey (from the included WoRMS lookup) |
+| `unpool_predators()` | Resolve records where `Number > 1` (a "predator" is really a pooled group of that many fish) to one row per implied individual (`method = "uncount"`, default) or drop them (`method = "filter"`). Uncount simply replicates that row `Number-regurgitated` times. That's why it's important this function is run before `drop_invalid()`! Not all individual predators in a pooled record are regurgitated necessarily. For example: a predator record may have `Number = 10` and `regurgitated = 2` (2 stomachs in the "pool"). If `drop_invalid()` is run first, the entire record will get lost, since there are regurgitated stomachs. What unpool_predators does it that it copies the record, distributed prey counts (to keep integer values), and divides prey weights by `Number > 1`. This creates pseudo-individuals. If `regurgitated = 2`, the first two pseudoindividuals are removed in `drop_invalid()`. The other option is to use `method = "filter"`. That simply drops records with `Number > 1`. This may be needed in case you want to look at variance etc. But maybe its better to use uncount if spatiotemporal coverage is important (Norway and early Netherlands data are all pooled). Importantly one of these methods has to be used if you want to look at things like stomach fullness or feeding rate.
+|
+| `drop_invalid()` | Remove predators with regurgitated stomach contents |
 | `impute_size()` | Estimate missing prey weight and length via L/W parameters (FishBase<sup>1</sup> for fish, Robinson et al. 2010<sup>2</sup> for invertebrates) with hierarchical taxonomic fallback; creates the final `predator_weight` column |
 | `trim_data()` | Return only the analysis-ready columns |
 | `sense_check()` | Add a `sense_flag` column marking implausible records (prey longer/heavier than predator, stomach heavier than predator, implausible predator lengths, unknown prey counts) for the user to inspect |
@@ -110,8 +113,9 @@ A full pipeline may look like this:
 
 ```r
 dat <- join_stomach_data("data/raw") |>
-  drop_invalid() |>
   add_taxonomy()|>
+  unpool_predators() |>
+  drop_invalid() |>
   impute_size() |>
   trim_data() |>
   sense_check() |>
