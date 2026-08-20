@@ -16,7 +16,9 @@
 #'   `prey_family`, `digestion_stage`, `sub_factor`, `count`,
 #'   `count_censored`, `prey_length`, `prey_weight_ind`,
 #'   `prey_weight_all_ind`, `other_wgt`, `prey_lw_source`, `lw_source`,
-#'   `pred_lw_source`, `analysing_org`.
+#'   `pred_lw_source`, `analysing_org`. Also includes `number` and
+#'   `unpooled` if [unpool_predators()] was called upstream (they're not
+#'   guaranteed columns -- omitted entirely if that step was skipped).
 #' @export
 trim_data <- function(dat) {
   keep <- c(
@@ -30,7 +32,9 @@ trim_data <- function(dat) {
     "prey_class", "prey_order", "prey_family", "digestion_stage",
     "sub_factor", "count", "count_censored", "prey_length",
     "prey_weight_ind", "prey_weight_all_ind", "other_wgt",
-    "prey_lw_source", "lw_source", "pred_lw_source", "analysing_org"
+    "prey_lw_source", "lw_source", "pred_lw_source", "analysing_org",
+    # only present if unpool_predators() ran upstream
+    "number", "unpooled"
   )
 
   dropped <- setdiff(names(dat), keep)
@@ -42,5 +46,5 @@ trim_data <- function(dat) {
     ))
   }
 
-  dat |> dplyr::select(dplyr::all_of(keep))
+  dat |> dplyr::select(dplyr::any_of(keep))
 }
