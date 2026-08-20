@@ -22,4 +22,11 @@ Reads \code{File_information.csv}, \code{HaulInformation.csv},
 them into a single flat tibble, classifies each stomach as \code{"food"},
 \code{"empty"}, or \code{"unidentified"}, deduplicates exact-duplicate prey rows,
 and optionally imputes missing coordinates from ICES rectangle midpoints.
+Also warns if any predator's raw \code{Length}/\code{IndWgt} is wildly inconsistent
+with an isometric length-weight curve (\code{W = 0.01 * L^3}), a sign of a
+unit error (e.g. length in mm instead of cm), and if any predator's
+\code{Number} is \verb{<= 0} (not a valid pooled-sample count) -- neither check
+fixes anything, both are raw-data sanity checks -- see
+\code{vignette("known-issues", package = "stomachr")} for worked examples of
+what these have caught in the live database.
 }

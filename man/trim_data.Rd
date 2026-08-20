@@ -21,7 +21,9 @@ A tibble with columns: \code{tbl_upload_id}, \code{tbl_haul_id},
 \code{prey_family}, \code{digestion_stage}, \code{sub_factor}, \code{count},
 \code{count_censored}, \code{prey_length}, \code{prey_weight_ind},
 \code{prey_weight_all_ind}, \code{other_wgt}, \code{prey_lw_source}, \code{lw_source},
-\code{pred_lw_source}, \code{analysing_org}.
+\code{pred_lw_source}, \code{analysing_org}. Also includes \code{number} and
+\code{unpooled} if \code{\link[=unpool_predators]{unpool_predators()}} was called upstream (they're not
+guaranteed columns -- omitted entirely if that step was skipped).
 }
 \description{
 Drops the internal processing columns that are no longer needed after the
