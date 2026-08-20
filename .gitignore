@@ -6,7 +6,7 @@ CLAUDE.md
 .DS_Store
 .quarto
 my-scripts/
-inst/
+inst/*
 !inst/extdata/
 !inst/extdata/**
 !inst/CITATION
