@@ -25,11 +25,14 @@ path <- system.file("extdata", package = "stomachr")
 ```{r rebuild-dat, eval = TRUE}
 dat <- join_stomach_data(path) |>
   dplyr::mutate(
-    pred_length = dplyr::if_else(country == "BE", pred_length / 10, pred_length),
-    ind_wgt     = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt)
+    pred_length  = dplyr::if_else(country == "BE" | tbl_upload_id == "8337", pred_length / 10, pred_length),
+    ind_wgt      = dplyr::if_else(country == "DK", ind_wgt * 1000, ind_wgt),
+    regurgitated = dplyr::if_else(tbl_upload_id == "8337", regurgitated - 1, regurgitated),
+    number       = dplyr::if_else(country == "NO", 1, number)
   ) |>
-  drop_invalid() |>
   add_taxonomy() |>
+  unpool_predators() |>
+  drop_invalid() |>
   impute_size() |>
   trim_data() |>
   sense_check() |>
