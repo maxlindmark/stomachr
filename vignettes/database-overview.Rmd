@@ -93,25 +93,11 @@ plot_map(filter(dat, ecoregion == "Greater North Sea"),
 
 Before the new database launched around 2022, there was another ICES stomach data base. When relaunching the data, the format was also changed. From the single `StomachDataFullOutput.csv` to the 4 .csv file version (one for each data type) in the current format. **All data have still not been reuploaded in the new format. This section serves as a guide to identify which data need to be reuploaded in the new format**.
 
-Below I compare the data coverage in the live version of the new database, with the last online version of the old database. The old database is not bundled with this package (it's 131MB). Let me know if you want a copy.
+Below I compare the data coverage in the live version of the new database, with the last online version of the old database. The old export itself is 131MB, too big to bundle. Instead, `data-raw/build_old_db_summary.R` aggregates it down to a year/country/ecoregion predator-count summary (`inst/extdata/old_database_summary.csv`) which ships with the package.
 
-```{r old-path, eval = TRUE}
-old_path <- "../my-scripts/StomachDataFullOutput.csv"
-has_old_data <- file.exists(old_path)
-```
+The old export uses full country names rather than the ISO codes the new database uses, so those were mapped by hand when building the summary. It also has no ecoregion column, so it was classified into the same regions from `Latitude`/`Longitude`: east of 13°E is Baltic Sea; east of 9°E is also Baltic Sea if south of 56°N (this picks up the Danish straits/Kattegat); everything else is Greater North Sea. Note that this merges Celtic Seas into Greater North Sea (Celtic Seas doesn't have much old data and isn't easy to split out by coordinates alone).
 
-```{r read-old, eval = has_old_data}
-old <- readr::read_csv(
-  old_path,
-  col_select = c(ICES_SampleID, year, Country, Latitude, Longitude),
-  na = c("NA", "NULL", ""),
-  show_col_types = FALSE
-)
-```
-
-The old export uses full country names rather than the ISO codes the new database uses, so we map them by hand. It also has no ecoregion column, so we classify it into the same three regions from `Latitude`/`Longitude`: east of 13°E is Baltic Sea; east of 9°E is also Baltic Sea if south of 56°N (this picks up the Danish straits/Kattegat); everything else is Greater North Sea. Note that we therefore merge Celtic Seas and Greater North Sea (because Celtic Seas doesnt have much data and it's not as easy to split based on coordinates...).
-
-```{r old-clean, eval = has_old_data}
+```{r old-clean, eval = TRUE}
 country_map <- c(
   "Belgium" = "BE", "Germany" = "DE", "Denmark" = "DK", "France" = "FR",
   "United Kingdom" = "GB", "Ireland" = "IE", "Latvia" = "LV",
@@ -119,19 +105,10 @@ country_map <- c(
 )
 country_name_map <- setNames(names(country_map), country_map)
 
-old_pred <- old |>
-  distinct(ICES_SampleID, year, Country, Latitude, Longitude) |>
-  mutate(
-    country = unname(country_map[Country]),
-    ecoregion = case_when(
-      Longitude >= 13 ~ "Baltic Sea",
-      Longitude >= 9 & Latitude < 56 ~ "Baltic Sea",
-      TRUE ~ "Greater North Sea"
-    )
-  ) |>
-  filter(!is.na(country))
-
-n_old <- old_pred |> count(ecoregion, year, country, name = "n_old")
+n_old <- readr::read_csv(
+  system.file("extdata", "old_database_summary.csv", package = "stomachr"),
+  show_col_types = FALSE
+)
 n_new <- dat |>
   distinct(tbl_predator_information_id, year, country, ecoregion) |>
   count(ecoregion, year, country, name = "n_new")
@@ -155,15 +132,15 @@ Specifically, what I tried, in order:
 
 Note that the old export only covers up to 2014. Positive bars from 2015 onwards just mean the new database has since collected data the old database never have had.
 
-```{r old-year-range, eval = has_old_data}
-range(old_pred$year, na.rm = TRUE)
+```{r old-year-range, eval = TRUE}
+range(n_old$year, na.rm = TRUE)
 ```
 
 ### Overall
 
 First we look at the total difference in n summed across every country, before breaking it down by country and region. Bars smaller than 5 predators either way are dropped to focus on the meaningful differences.
 
-```{r plot-old-new-overall, eval = has_old_data, fig.height = 4, fig.width = 8}
+```{r plot-old-new-overall, eval = TRUE, fig.height = 4, fig.width = 8}
 year_breaks <- function(n = 10) {
   function(x) {
     rng <- range(x, na.rm = TRUE)
@@ -232,7 +209,7 @@ diff_bar(cmp_overall, subtitle = missing_subtitle(cmp_overall))
 
 Each region shown two ways: the region-level total, and the same gap broken down by country to see who's driving it.
 
-```{r plot-old-new-region, eval = has_old_data, results = "asis", fig.height = 3, fig.width = 7}
+```{r plot-old-new-region, eval = TRUE, results = "asis", fig.height = 3, fig.width = 7}
 cmp_region <- cmp |>
   summarise(n_new = sum(n_new), n_old = sum(n_old), .by = c(ecoregion, year)) |>
   mutate(diff = n_new - n_old)
@@ -252,7 +229,7 @@ for (r in regions) {
 
 Also faceted by region: the old export has complete coordinates for every predator (no missing `Latitude`/`Longitude` at all), so there's no data-quality reason not to break this down further. Note the the Celtic Seas are not resolved here!
 
-```{r plot-old-new-country, eval = has_old_data, results = "asis", fig.height = 3, fig.width = 8}
+```{r plot-old-new-country, eval = TRUE, results = "asis", fig.height = 3, fig.width = 8}
 for (co in sort(unique(cmp$country))) {
   cat("####", country_name_map[[co]], "\n\n")
   d <- filter(cmp, country == co)
