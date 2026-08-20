@@ -67,24 +67,24 @@ Plot spatial coverage: one plot per region, one panel per year, points coloured 
 
 ### Baltic Sea
 
-```{r plot-map-baltic, eval = TRUE}
+```{r plot-map-baltic, eval = TRUE, fig.height = 13, fig.width = 8}
 plot_map(filter(dat, ecoregion == "Baltic Sea"), 
          color = "country", facet = "year", ncol = 6)
 ```
 
 ### Celtic Seas
 
-```{r plot-map-celtic, eval = TRUE}
+```{r plot-map-celtic, eval = TRUE, fig.height = 5, fig.width = 8}
 plot_map(
   filter(dat, ecoregion == "Celtic Seas"),
   color = "country", facet = "year", ncol = 6,
-  xlim = c(-11, 3), ylim = c(50, 62)
+  xlim = c(-9, 6), ylim = c(54, 64)
 )
 ```
 
 ### Greater North Sea
 
-```{r plot-map-gns, eval = TRUE}
+```{r plot-map-gns, eval = TRUE, fig.height = 8, fig.width = 8}
 plot_map(filter(dat, ecoregion == "Greater North Sea"),
          color = "country", facet = "year", ncol = 6)
 ```
