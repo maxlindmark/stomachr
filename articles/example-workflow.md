@@ -88,10 +88,10 @@ printed by the function.
 ``` r
 
 dat <- join_stomach_data(path)
-#> join_stomach_data(): 9,275 predator individuals
-#> ✔ 3,932 (42.4%) with identifiable prey
-#> ℹ 4,253 (45.9%) empty or regurgitated
-#> ℹ 1,090 (11.8%) with prey records but no prey species ID
+#> join_stomach_data(): 8,886 predator individuals
+#> ✔ 3,845 (43.3%) with identifiable prey
+#> ℹ 4,084 (46.0%) empty or regurgitated
+#> ℹ 957 (10.8%) with prey records but no prey species ID
 #>   (cannot contribute to diet composition but can contribute to total prey
 #>   weight)
 #> ℹ 0 haul locations imputed from ICES rectangle midpoint
@@ -114,15 +114,16 @@ argument controls whether `NA` values are treated as not regurgitated
 ``` r
 
 dat <- drop_invalid(dat, na_regurgitated = "keep")
-#> drop_invalid(): 9,275 -> 8,988 predators (287 dropped, 3.1%)
+#> drop_invalid(): 8,886 -> 8,559 predators (327 dropped, 3.7%)
 #> ℹ regurgitated value >= 1 assumed regurgitated
-#> ℹ regurgitated == NA assumed not regurgitated (n = 4,427 kept)
+#> ℹ regurgitated == NA assumed not regurgitated (n = 3,927 kept)
 #> ℹ Dropped by country:
 #>   country   n percent_of_total
-#> 1      BE   7             0.1%
-#> 2      DK   7             0.1%
-#> 3      NL 114             1.2%
-#> 4      SE 159             1.7%
+#> 1      BE  18             0.2%
+#> 2      DK   6             0.1%
+#> 3      NL 114             1.3%
+#> 4      NO  30             0.3%
+#> 5      SE 159             1.8%
 #> 
 ```
 
@@ -138,7 +139,7 @@ so their weight is not silently lost.
 dat <- add_taxonomy(dat)
 #> add_taxonomy(): WoRMS names resolved
 #> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
-#> ✔ Prey AphiaIDs: 252 unique, 0 unresolved
+#> ! Prey AphiaIDs: 254 unique, 3 unresolved
 #> 
 ```
 
@@ -169,21 +170,21 @@ dat <- impute_size(dat, which = "both", method = "lw_params", size = "both")
 #> impute_size(): which = "both" | method = "lw_params" | size = "both" |
 #> fill_if_no_size = TRUE
 #> 
-#> Prey: 8,169 records | L/W params (unique AphiaIDs): species: 64, family: 40,
-#> order: 31, class: 57, phylum: 16, universal (a=0.01, b=3): 44
-#> |-- both weight and length recorded: 1,871 (22.9%)
-#> |-- one size recorded, other estimated: 6,207 (76.0%)
-#> | |-- had length, estimated weight via L/W: 21 (0.3%)
-#> | +-- had weight, estimated length via L/W: 6,186 (75.7%)
-#> |-- no size recorded, imputed from other records: 88 (1.1%)
+#> Prey: 7,985 records | L/W params (unique AphiaIDs): species: 65, family: 39,
+#> order: 30, class: 56, phylum: 16, universal (a=0.01, b=3): 48
+#> |-- both weight and length recorded: 1,767 (22.1%)
+#> |-- one size recorded, other estimated: 6,099 (76.4%)
+#> | |-- had length, estimated weight via L/W: 24 (0.3%)
+#> | +-- had weight, estimated length via L/W: 6,075 (76.1%)
+#> |-- no size recorded, imputed from other records: 115 (1.4%)
 #> | |-- same stomach: mean weight -> length via L/W: 8 (0.1%)
-#> | |-- same pred-prey pair: mean weight -> length via L/W: 77 (0.9%)
+#> | |-- same pred-prey pair: mean weight -> length via L/W: 104 (1.3%)
 #> | +-- global species mean: mean weight -> length via L/W: 3 (0.0%)
-#> +-- no size info in any record of that species: 3 (0.0%) (diet composition
+#> +-- no size info in any record of that species: 4 (0.1%) (diet composition
 #> only, weight unusable)
 #> 
-#> Predator: 14,562 rows | L/W params (unique AphiaIDs): species: 22, family: 1
-#> |-- weight and length observed: 14,562 (100.0%)
+#> Predator: 13,935 rows | L/W params (unique AphiaIDs): species: 22, family: 1
+#> |-- weight and length observed: 13,935 (100.0%)
 #> +-- weight observed, length missing: 0 (0.0%)
 #> 
 ```
@@ -217,14 +218,16 @@ examining `tbl_predator_information_id` in the raw data.
 ``` r
 
 dat <- sense_check(dat)
-#> sense_check(): 14,562 rows
+#> sense_check(): 13,935 rows
+#> ! prey longer than predator (same unit assumed): 1 row (0.0%) across 1 predator
+#>   tbl_predator_information_id: 110462
 #> ! total stomach content heavier than predator: 1 row (0.0%) across 1 predator
 #>   tbl_predator_information_id: 110348
-#> ℹ 1 row flagged (0.01%)
+#> ℹ 2 rows flagged (0.01%)
 #> ℹ Use `drop_flagged()` to remove, or inspect tbl_predator_information_id in raw
 #>   data
 #> 
 dat <- drop_flagged(dat)
-#> ✔ drop_flagged(): removed 1 row (0.01%), 14,561 remaining
+#> ✔ drop_flagged(): removed 2 rows (0.01%), 13,933 remaining
 #> 
 ```

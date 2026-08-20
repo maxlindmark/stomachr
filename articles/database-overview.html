@@ -173,28 +173,21 @@ section serves as a guide to identify which data need to be reuploaded
 in the new format</strong>.</p>
 <p>Below I compare the data coverage in the live version of the new
 database, with the last online version of the old database. The old
-database is not bundled with this package (it’s 131MB). Let me know if
-you want a copy.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">old_path</span> <span class="op">&lt;-</span> <span class="st">"../my-scripts/StomachDataFullOutput.csv"</span></span>
-<span><span class="va">has_old_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">old_path</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span></span>
-<span>  <span class="va">old_path</span>,</span>
-<span>  col_select <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ICES_SampleID</span>, <span class="va">year</span>, <span class="va">Country</span>, <span class="va">Latitude</span>, <span class="va">Longitude</span><span class="op">)</span>,</span>
-<span>  na <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NA"</span>, <span class="st">"NULL"</span>, <span class="st">""</span><span class="op">)</span>,</span>
-<span>  show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+export itself is 131MB, too big to bundle. Instead,
+<code>data-raw/build_old_db_summary.R</code> aggregates it down to a
+year/country/ecoregion predator-count summary
+(<code>inst/extdata/old_database_summary.csv</code>) which ships with
+the package.</p>
 <p>The old export uses full country names rather than the ISO codes the
-new database uses, so we map them by hand. It also has no ecoregion
-column, so we classify it into the same three regions from
-<code>Latitude</code>/<code>Longitude</code>: east of 13°E is Baltic
-Sea; east of 9°E is also Baltic Sea if south of 56°N (this picks up the
-Danish straits/Kattegat); everything else is Greater North Sea. Note
-that we therefore merge Celtic Seas and Greater North Sea (because
-Celtic Seas doesnt have much data and it’s not as easy to split based on
-coordinates…).</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+new database uses, so those were mapped by hand when building the
+summary. It also has no ecoregion column, so it was classified into the
+same regions from <code>Latitude</code>/<code>Longitude</code>: east of
+13°E is Baltic Sea; east of 9°E is also Baltic Sea if south of 56°N
+(this picks up the Danish straits/Kattegat); everything else is Greater
+North Sea. Note that this merges Celtic Seas into Greater North Sea
+(Celtic Seas doesn’t have much old data and isn’t easy to split out by
+coordinates alone).</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">country_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Belgium"</span> <span class="op">=</span> <span class="st">"BE"</span>, <span class="st">"Germany"</span> <span class="op">=</span> <span class="st">"DE"</span>, <span class="st">"Denmark"</span> <span class="op">=</span> <span class="st">"DK"</span>, <span class="st">"France"</span> <span class="op">=</span> <span class="st">"FR"</span>,</span>
 <span>  <span class="st">"United Kingdom"</span> <span class="op">=</span> <span class="st">"GB"</span>, <span class="st">"Ireland"</span> <span class="op">=</span> <span class="st">"IE"</span>, <span class="st">"Latvia"</span> <span class="op">=</span> <span class="st">"LV"</span>,</span>
@@ -202,19 +195,10 @@ coordinates…).</p>
 <span><span class="op">)</span></span>
 <span><span class="va">country_name_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">country_map</span><span class="op">)</span>, <span class="va">country_map</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">old_pred</span> <span class="op">&lt;-</span> <span class="va">old</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">ICES_SampleID</span>, <span class="va">year</span>, <span class="va">Country</span>, <span class="va">Latitude</span>, <span class="va">Longitude</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    country <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">country_map</span><span class="op">[</span><span class="va">Country</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>    ecoregion <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
-<span>      <span class="va">Longitude</span> <span class="op">&gt;=</span> <span class="fl">13</span> <span class="op">~</span> <span class="st">"Baltic Sea"</span>,</span>
-<span>      <span class="va">Longitude</span> <span class="op">&gt;=</span> <span class="fl">9</span> <span class="op">&amp;</span> <span class="va">Latitude</span> <span class="op">&lt;</span> <span class="fl">56</span> <span class="op">~</span> <span class="st">"Baltic Sea"</span>,</span>
-<span>      <span class="cn">TRUE</span> <span class="op">~</span> <span class="st">"Greater North Sea"</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">country</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">n_old</span> <span class="op">&lt;-</span> <span class="va">old_pred</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">ecoregion</span>, <span class="va">year</span>, <span class="va">country</span>, name <span class="op">=</span> <span class="st">"n_old"</span><span class="op">)</span></span>
+<span><span class="va">n_old</span> <span class="op">&lt;-</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"old_database_summary.csv"</span>, package <span class="op">=</span> <span class="st">"stomachr"</span><span class="op">)</span>,</span>
+<span>  show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">n_new</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">tbl_predator_information_id</span>, <span class="va">year</span>, <span class="va">country</span>, <span class="va">ecoregion</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">ecoregion</span>, <span class="va">year</span>, <span class="va">country</span>, name <span class="op">=</span> <span class="st">"n_new"</span><span class="op">)</span></span>
@@ -269,8 +253,9 @@ year/country; negative means it has <em>fewer</em>.</p>
 <p>Note that the old export only covers up to 2014. Positive bars from
 2015 onwards just mean the new database has since collected data the old
 database never have had.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">old_pred</span><span class="op">$</span><span class="va">year</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">n_old</span><span class="op">$</span><span class="va">year</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1963 2014</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="overall">Overall<a class="anchor" aria-label="anchor" href="#overall"></a>
 </h3>
@@ -278,7 +263,7 @@ database never have had.</p>
 country, before breaking it down by country and region. Bars smaller
 than 5 predators either way are dropped to focus on the meaningful
 differences.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">year_breaks</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">rng</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -341,13 +326,14 @@ differences.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>diff <span class="op">=</span> <span class="va">n_new</span> <span class="op">-</span> <span class="va">n_old</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">diff_bar</span><span class="op">(</span><span class="va">cmp_overall</span>, subtitle <span class="op">=</span> <span class="fu">missing_subtitle</span><span class="op">(</span><span class="va">cmp_overall</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="database-overview_files/figure-html/plot-old-new-overall-1.png" class="r-plt" alt="" width="768"></p>
 </div>
 <div class="section level3">
 <h3 id="by-region">By region<a class="anchor" aria-label="anchor" href="#by-region"></a>
 </h3>
 <p>Each region shown two ways: the region-level total, and the same gap
 broken down by country to see who’s driving it.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp_region</span> <span class="op">&lt;-</span> <span class="va">cmp</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_new <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_new</span><span class="op">)</span>, n_old <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_old</span><span class="op">)</span>, .by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ecoregion</span>, <span class="va">year</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>diff <span class="op">=</span> <span class="va">n_new</span> <span class="op">-</span> <span class="va">n_old</span><span class="op">)</span></span>
@@ -361,6 +347,24 @@ broken down by country to see who’s driving it.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">diff_bar_country</span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cmp</span>, <span class="va">ecoregion</span> <span class="op">==</span> <span class="va">r</span><span class="op">)</span>, subtitle <span class="op">=</span> <span class="va">subtitle</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n\n"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="baltic-sea-1">Baltic Sea<a class="anchor" aria-label="anchor" href="#baltic-sea-1"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-2.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level4">
+<h4 id="celtic-seas-1">Celtic Seas<a class="anchor" aria-label="anchor" href="#celtic-seas-1"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-3.png" class="r-plt" alt="" width="672"></p>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-4.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level4">
+<h4 id="greater-north-sea-1">Greater North Sea<a class="anchor" aria-label="anchor" href="#greater-north-sea-1"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-5.png" class="r-plt" alt="" width="672"></p>
+<p><img src="database-overview_files/figure-html/plot-old-new-region-6.png" class="r-plt" alt="" width="672"></p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="by-country">By country<a class="anchor" aria-label="anchor" href="#by-country"></a>
@@ -369,7 +373,7 @@ broken down by country to see who’s driving it.</p>
 every predator (no missing <code>Latitude</code>/<code>Longitude</code>
 at all), so there’s no data-quality reason not to break this down
 further. Note the the Celtic Seas are not resolved here!</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">for</span> <span class="op">(</span><span class="va">co</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">$</span><span class="va">country</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"####"</span>, <span class="va">country_name_map</span><span class="op">[[</span><span class="va">co</span><span class="op">]</span><span class="op">]</span>, <span class="st">"\n\n"</span><span class="op">)</span></span>
 <span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cmp</span>, <span class="va">country</span> <span class="op">==</span> <span class="va">co</span><span class="op">)</span></span>
@@ -380,6 +384,61 @@ further. Note the the Celtic Seas are not resolved here!</p>
 <span>  <span class="op">}</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n\n"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="belgium">Belgium<a class="anchor" aria-label="anchor" href="#belgium"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-1.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="germany">Germany<a class="anchor" aria-label="anchor" href="#germany"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-2.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="denmark">Denmark<a class="anchor" aria-label="anchor" href="#denmark"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-3.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="france">France<a class="anchor" aria-label="anchor" href="#france"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-4.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="united-kingdom">United Kingdom<a class="anchor" aria-label="anchor" href="#united-kingdom"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-5.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="ireland">Ireland<a class="anchor" aria-label="anchor" href="#ireland"></a>
+</h4>
+<p>No differences of at least 5 predators for any year/region.</p>
+</div>
+<div class="section level4">
+<h4 id="latvia">Latvia<a class="anchor" aria-label="anchor" href="#latvia"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-6.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="the-netherlands">The Netherlands<a class="anchor" aria-label="anchor" href="#the-netherlands"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-7.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="norway">Norway<a class="anchor" aria-label="anchor" href="#norway"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-8.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="poland">Poland<a class="anchor" aria-label="anchor" href="#poland"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-9.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level4">
+<h4 id="sweden">Sweden<a class="anchor" aria-label="anchor" href="#sweden"></a>
+</h4>
+<p><img src="database-overview_files/figure-html/plot-old-new-country-10.png" class="r-plt" alt="" width="768"></p>
+</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

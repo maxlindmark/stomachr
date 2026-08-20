@@ -116,33 +116,19 @@ guide to identify which data need to be reuploaded in the new format**.
 
 Below I compare the data coverage in the live version of the new
 database, with the last online version of the old database. The old
-database is not bundled with this package (it’s 131MB). Let me know if
-you want a copy.
-
-``` r
-
-old_path <- "../my-scripts/StomachDataFullOutput.csv"
-has_old_data <- file.exists(old_path)
-```
-
-``` r
-
-old <- readr::read_csv(
-  old_path,
-  col_select = c(ICES_SampleID, year, Country, Latitude, Longitude),
-  na = c("NA", "NULL", ""),
-  show_col_types = FALSE
-)
-```
+export itself is 131MB, too big to bundle. Instead,
+`data-raw/build_old_db_summary.R` aggregates it down to a
+year/country/ecoregion predator-count summary
+(`inst/extdata/old_database_summary.csv`) which ships with the package.
 
 The old export uses full country names rather than the ISO codes the new
-database uses, so we map them by hand. It also has no ecoregion column,
-so we classify it into the same three regions from
-`Latitude`/`Longitude`: east of 13°E is Baltic Sea; east of 9°E is also
-Baltic Sea if south of 56°N (this picks up the Danish straits/Kattegat);
-everything else is Greater North Sea. Note that we therefore merge
-Celtic Seas and Greater North Sea (because Celtic Seas doesnt have much
-data and it’s not as easy to split based on coordinates…).
+database uses, so those were mapped by hand when building the summary.
+It also has no ecoregion column, so it was classified into the same
+regions from `Latitude`/`Longitude`: east of 13°E is Baltic Sea; east of
+9°E is also Baltic Sea if south of 56°N (this picks up the Danish
+straits/Kattegat); everything else is Greater North Sea. Note that this
+merges Celtic Seas into Greater North Sea (Celtic Seas doesn’t have much
+old data and isn’t easy to split out by coordinates alone).
 
 ``` r
 
@@ -153,19 +139,10 @@ country_map <- c(
 )
 country_name_map <- setNames(names(country_map), country_map)
 
-old_pred <- old |>
-  distinct(ICES_SampleID, year, Country, Latitude, Longitude) |>
-  mutate(
-    country = unname(country_map[Country]),
-    ecoregion = case_when(
-      Longitude >= 13 ~ "Baltic Sea",
-      Longitude >= 9 & Latitude < 56 ~ "Baltic Sea",
-      TRUE ~ "Greater North Sea"
-    )
-  ) |>
-  filter(!is.na(country))
-
-n_old <- old_pred |> count(ecoregion, year, country, name = "n_old")
+n_old <- readr::read_csv(
+  system.file("extdata", "old_database_summary.csv", package = "stomachr"),
+  show_col_types = FALSE
+)
 n_new <- dat |>
   distinct(tbl_predator_information_id, year, country, ecoregion) |>
   count(ecoregion, year, country, name = "n_new")
@@ -222,7 +199,8 @@ database never have had.
 
 ``` r
 
-range(old_pred$year, na.rm = TRUE)
+range(n_old$year, na.rm = TRUE)
+#> [1] 1963 2014
 ```
 
 ### Overall
@@ -297,6 +275,8 @@ cmp_overall <- cmp |>
 diff_bar(cmp_overall, subtitle = missing_subtitle(cmp_overall))
 ```
 
+![](database-overview_files/figure-html/plot-old-new-overall-1.png)
+
 ### By region
 
 Each region shown two ways: the region-level total, and the same gap
@@ -319,6 +299,24 @@ for (r in regions) {
 }
 ```
 
+#### Baltic Sea
+
+![](database-overview_files/figure-html/plot-old-new-region-1.png)
+
+![](database-overview_files/figure-html/plot-old-new-region-2.png)
+
+#### Celtic Seas
+
+![](database-overview_files/figure-html/plot-old-new-region-3.png)
+
+![](database-overview_files/figure-html/plot-old-new-region-4.png)
+
+#### Greater North Sea
+
+![](database-overview_files/figure-html/plot-old-new-region-5.png)
+
+![](database-overview_files/figure-html/plot-old-new-region-6.png)
+
 ### By country
 
 Also faceted by region: the old export has complete coordinates for
@@ -339,3 +337,47 @@ for (co in sort(unique(cmp$country))) {
   cat("\n\n")
 }
 ```
+
+#### Belgium
+
+![](database-overview_files/figure-html/plot-old-new-country-1.png)
+
+#### Germany
+
+![](database-overview_files/figure-html/plot-old-new-country-2.png)
+
+#### Denmark
+
+![](database-overview_files/figure-html/plot-old-new-country-3.png)
+
+#### France
+
+![](database-overview_files/figure-html/plot-old-new-country-4.png)
+
+#### United Kingdom
+
+![](database-overview_files/figure-html/plot-old-new-country-5.png)
+
+#### Ireland
+
+No differences of at least 5 predators for any year/region.
+
+#### Latvia
+
+![](database-overview_files/figure-html/plot-old-new-country-6.png)
+
+#### The Netherlands
+
+![](database-overview_files/figure-html/plot-old-new-country-7.png)
+
+#### Norway
+
+![](database-overview_files/figure-html/plot-old-new-country-8.png)
+
+#### Poland
+
+![](database-overview_files/figure-html/plot-old-new-country-9.png)
+
+#### Sweden
+
+![](database-overview_files/figure-html/plot-old-new-country-10.png)

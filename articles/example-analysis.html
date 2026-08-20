@@ -92,45 +92,46 @@ plots.</p>
 <span>  <span class="fu"><a href="../reference/trim_data.html">trim_data</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sense_check.html">sense_check</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/drop_flagged.html">drop_flagged</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 9,275 predator individuals</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> 3,932 (42.4%) with identifiable prey</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,253 (45.9%) empty or regurgitated</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 1,090 (11.8%) with prey records but no prey species ID</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 8,886 predator individuals</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> 3,845 (43.3%) with identifiable prey</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,084 (46.0%) empty or regurgitated</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 957 (10.8%) with prey records but no prey species ID</span></span>
 <span><span class="co">#&gt;   (cannot contribute to diet composition but can contribute to total prey</span></span>
 <span><span class="co">#&gt;   weight)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 0 haul locations imputed from ICES rectangle midpoint</span></span>
 <span><span class="co">#&gt;   </span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">drop_invalid()</span>: 9,275 -&gt; 8,988 predators (287 dropped, 3.1%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">drop_invalid()</span>: 8,886 -&gt; 8,559 predators (327 dropped, 3.7%)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated value &gt;= 1 assumed regurgitated</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated == NA assumed not regurgitated (n = 4,427 kept)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated == NA assumed not regurgitated (n = 3,927 kept)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Dropped by country:</span></span>
 <span><span class="co">#&gt;   country   n percent_of_total</span></span>
-<span><span class="co">#&gt; 1      BE   7             0.1%</span></span>
-<span><span class="co">#&gt; 2      DK   7             0.1%</span></span>
-<span><span class="co">#&gt; 3      NL 114             1.2%</span></span>
-<span><span class="co">#&gt; 4      SE 159             1.7%</span></span>
+<span><span class="co">#&gt; 1      BE  18             0.2%</span></span>
+<span><span class="co">#&gt; 2      DK   6             0.1%</span></span>
+<span><span class="co">#&gt; 3      NL 114             1.3%</span></span>
+<span><span class="co">#&gt; 4      NO  30             0.3%</span></span>
+<span><span class="co">#&gt; 5      SE 159             1.8%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">add_taxonomy()</span>: WoRMS names resolved</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Predator AphiaIDs: 23 unique, 0 unresolved</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Prey AphiaIDs: 252 unique, 0 unresolved</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Prey AphiaIDs: 254 unique, 3 unresolved</span></span>
 <span><span class="co">#&gt;   <span style="color: #00BBBB;">impute_size()</span>: which = <span style="color: #0000BB;">"both"</span> | method = <span style="color: #0000BB;">"lw_params"</span> | size = <span style="color: #0000BB;">"both"</span> |</span></span>
 <span><span class="co">#&gt; fill_if_no_size = <span style="color: #0000BB;">TRUE</span></span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Prey: 8,169 records | L/W params (unique AphiaIDs): species: 64, family: 40,</span></span>
-<span><span class="co">#&gt; order: 31, class: 57, phylum: 16, universal (a=0.01, b=3): 44</span></span>
-<span><span class="co">#&gt; |-- both weight and length recorded: 1,871 (22.9%)</span></span>
-<span><span class="co">#&gt; |-- one size recorded, other estimated: 6,207 (76.0%)</span></span>
-<span><span class="co">#&gt; | |-- had length, estimated weight via L/W: 21 (0.3%)</span></span>
-<span><span class="co">#&gt; | +-- had weight, estimated length via L/W: 6,186 (75.7%)</span></span>
-<span><span class="co">#&gt; |-- no size recorded, imputed from other records: 88 (1.1%)</span></span>
+<span><span class="co">#&gt; Prey: 7,985 records | L/W params (unique AphiaIDs): species: 65, family: 39,</span></span>
+<span><span class="co">#&gt; order: 30, class: 56, phylum: 16, universal (a=0.01, b=3): 48</span></span>
+<span><span class="co">#&gt; |-- both weight and length recorded: 1,767 (22.1%)</span></span>
+<span><span class="co">#&gt; |-- one size recorded, other estimated: 6,099 (76.4%)</span></span>
+<span><span class="co">#&gt; | |-- had length, estimated weight via L/W: 24 (0.3%)</span></span>
+<span><span class="co">#&gt; | +-- had weight, estimated length via L/W: 6,075 (76.1%)</span></span>
+<span><span class="co">#&gt; |-- no size recorded, imputed from other records: 115 (1.4%)</span></span>
 <span><span class="co">#&gt; | |-- same stomach: mean weight -&gt; length via L/W: 8 (0.1%)</span></span>
-<span><span class="co">#&gt; | |-- same pred-prey pair: mean weight -&gt; length via L/W: 77 (0.9%)</span></span>
+<span><span class="co">#&gt; | |-- same pred-prey pair: mean weight -&gt; length via L/W: 104 (1.3%)</span></span>
 <span><span class="co">#&gt; | +-- global species mean: mean weight -&gt; length via L/W: 3 (0.0%)</span></span>
-<span><span class="co">#&gt; +-- no size info in any record of that species: 3 (0.0%) (diet composition</span></span>
+<span><span class="co">#&gt; +-- no size info in any record of that species: 4 (0.1%) (diet composition</span></span>
 <span><span class="co">#&gt; only, weight unusable)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Predator: 14,562 rows | L/W params (unique AphiaIDs): species: 22, family: 1</span></span>
-<span><span class="co">#&gt; |-- weight and length observed: 14,562 (100.0%)</span></span>
+<span><span class="co">#&gt; Predator: 13,935 rows | L/W params (unique AphiaIDs): species: 22, family: 1</span></span>
+<span><span class="co">#&gt; |-- weight and length observed: 13,935 (100.0%)</span></span>
 <span><span class="co">#&gt; +-- weight observed, length missing: 0 (0.0%)</span></span>
 <span><span class="co">#&gt;   <span style="color: #00BBBB;">trim_data()</span>: dropped 33 columns:</span></span>
 <span><span class="co">#&gt;   ship, gear, haul_no, station_number, fish_id, ind_wgt, number,</span></span>
@@ -140,11 +141,12 @@ plots.</p>
 <span><span class="co">#&gt;   unit_wgt, weight, unit_lngt, other_items, other_count, predator_rank,</span></span>
 <span><span class="co">#&gt;   predator_phylum, predator_genus, prey_rank, prey_phylum, prey_genus,</span></span>
 <span><span class="co">#&gt;   ind_weight_est</span></span>
-<span><span class="co">#&gt;   <span style="color: #00BBBB;">sense_check()</span>: 14,562 rows<span style="color: #BBBB00;">!</span> total stomach content heavier than predator: 1 row (0.0%) across 1 predator</span></span>
-<span><span class="co">#&gt;   tbl_predator_information_id: 110348<span style="color: #00BBBB;">ℹ</span> 1 row flagged (0.01%)</span></span>
+<span><span class="co">#&gt;   <span style="color: #00BBBB;">sense_check()</span>: 13,935 rows<span style="color: #BBBB00;">!</span> prey longer than predator (same unit assumed): 1 row (0.0%) across 1 predator</span></span>
+<span><span class="co">#&gt;   tbl_predator_information_id: 110462<span style="color: #BBBB00;">!</span> total stomach content heavier than predator: 1 row (0.0%) across 1 predator</span></span>
+<span><span class="co">#&gt;   tbl_predator_information_id: 110348<span style="color: #00BBBB;">ℹ</span> 2 rows flagged (0.01%)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `drop_flagged()` to remove, or inspect <span style="color: #00BB00;">tbl_predator_information_id</span> in raw</span></span>
 <span><span class="co">#&gt;   data</span></span>
-<span><span class="co">#&gt;   <span style="color: #00BB00;">✔</span> <span style="color: #00BBBB;">drop_flagged()</span>: removed 1 row (0.01%), 14,561 remaining</span></span>
+<span><span class="co">#&gt;   <span style="color: #00BB00;">✔</span> <span style="color: #00BBBB;">drop_flagged()</span>: removed 2 rows (0.01%), 13,933 remaining</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>The next sections show some basic plots for the most common predators
 in the build in North Sea data (2020–2024).</p>
