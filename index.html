@@ -37,7 +37,15 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/example-workflow.html">Workflow</a></li>
+    <li><a class="dropdown-item" href="articles/example-analysis.html">Example analysis</a></li>
+    <li><a class="dropdown-item" href="articles/known-issues.html">Known issues</a></li>
+    <li><a class="dropdown-item" href="articles/database-overview.html">Database overview</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
@@ -176,10 +184,6 @@
 <tr>
 <td><code><a href="reference/unpool_predators.html">unpool_predators()</a></code></td>
 <td>Resolve records where <code>Number &gt; 1</code> (a “predator” is really a pooled group of that many fish) to one row per implied individual (<code>method = "uncount"</code>, default) or drop them (<code>method = "filter"</code>). Uncount simply replicates that row <code>Number-regurgitated</code> times. That’s why it’s important this function is run before <code><a href="reference/drop_invalid.html">drop_invalid()</a></code>! Not all individual predators in a pooled record are regurgitated necessarily. For example: a predator record may have <code>Number = 10</code> and <code>regurgitated = 2</code> (2 stomachs in the “pool”). If <code><a href="reference/drop_invalid.html">drop_invalid()</a></code> is run first, the entire record will get lost, since there are regurgitated stomachs. What unpool_predators does it that it copies the record, distributed prey counts (to keep integer values), and divides prey weights by <code>Number &gt; 1</code>. This creates pseudo-individuals. If <code>regurgitated = 2</code>, the first two pseudoindividuals are removed in <code><a href="reference/drop_invalid.html">drop_invalid()</a></code>. The other option is to use <code>method = "filter"</code>. That simply drops records with <code>Number &gt; 1</code>. This may be needed in case you want to look at variance etc. But maybe its better to use uncount if spatiotemporal coverage is important (Norway and early Netherlands data are all pooled). Importantly one of these methods has to be used if you want to look at things like stomach fullness or feeding rate.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td><code><a href="reference/drop_invalid.html">drop_invalid()</a></code></td>
