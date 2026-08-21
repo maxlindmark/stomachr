@@ -18,6 +18,8 @@ add_taxonomy(dat)
 Left-joins scientific names and higher taxonomy (class, order, family,
 phylum) for both predators and prey using the bundled WoRMS lookup table
 (\link{worms_lookup}, built in \code{data-raw/build_worms_lookup.R}).
-Prey with \code{aphia_id_prey = NA} in non-empty stomachs are labelled
-\code{"Unknown"} so their weight is not silently lost downstream.
+Prey with no resolved scientific name in non-empty stomachs -- either
+\code{aphia_id_prey = NA} (no id recorded), or an id that isn't in
+\link{worms_lookup} -- are labelled \code{"Unknown"} so their weight is not
+silently lost downstream.
 }
