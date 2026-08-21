@@ -29,11 +29,13 @@ Suggests:
     rfishbase,
     rmarkdown,
     scales,
+    testthat (>= 3.0.0),
     tidyr,
     worrms
 URL: https://github.com/maxlindmark/stomachr, https://maxlindmark.github.io/stomachr/
 BugReports: https://github.com/maxlindmark/stomachr/issues
-Depends: 
-    R (>= 2.10)
+Depends:
+    R (>= 3.5)
 LazyData: true
 Config/roxygen2/version: 8.1.0
+Config/testthat/edition: 3
