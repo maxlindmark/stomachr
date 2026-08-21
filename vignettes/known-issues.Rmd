@@ -576,6 +576,9 @@ dup_hauls_by_country |>
 - `Regurgitated`: *"Number of stomachs regurgitated"* (no "in the sample"). This is mainly a wording inconsistency.
 - Both are counts relative to `Number`, consistent with `Number`'s own "(pooled samples)" note. It's worth stating explicitly, since the convention among many analysts seems to be that `Regurgitated` is a 0/1 flag rather than a count. Could it be that countries that **do not** upload pooled stomachs treat it as a binary? It doesn't really matter if all they do is upload non-pooled stomachs. But it helps understand the columns, and make the `unpool_predators()` function in this package easier to understand (where we create pseudo-individuals and remove as many as are regurgitated).
 
+### 5. General points
+- Should impossible combinations be flagged during upload? For example, check if `Regurgitated` > `Number` (would catch the Swedish legacy code), check if `IndWgt` > prey weight, should it be possible to populate `IndWgt` if `Number` > 1?
+
 ## Open question: should a regurgitated stomach have prey content at all?
 
 It's also worth asking why a truly regurgitated stomach would ever reach species-level identification in the first place. Speaking to onboard samplers, if a stomach is visibly regurgitated, a new predator is selected. Many fish in this data are classified as regurgitated, but still have prey contents... Typically the issue with regurgitated stomachs is that we cannot separate them from truly empty stomachs. 
