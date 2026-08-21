@@ -76,6 +76,11 @@ unpool_predators <- function(dat, method = c("uncount", "filter")) {
   # method == "uncount" ------------------------------------------------------
   not_pooled <- dat[!is_pooled, ]
   not_pooled$unpooled <- FALSE
+  # expanded's tbl_predator_information_id becomes character below (paste0
+  # with the copy index); match that here so the final bind_rows() doesn't
+  # fail on a numeric/character type mismatch when the input id is numeric
+  # (as it is for real ICES data, where this is a database key).
+  not_pooled$tbl_predator_information_id <- as.character(not_pooled$tbl_predator_information_id)
 
   pooled <- dat[is_pooled, ]
 
