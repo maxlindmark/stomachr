@@ -42,7 +42,7 @@ dat <- join_stomach_data(path) |>
 #>   
 #> add_taxonomy(): WoRMS names resolved
 #> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
-#> ! Prey AphiaIDs: 254 unique, 3 unresolved
+#> ✔ Prey AphiaIDs: 254 unique, 0 unresolved
 #>   
 #> drop_invalid(): 8,886 -> 8,559 predators (327 dropped, 3.7%)
 #> ℹ regurgitated value >= 1 assumed regurgitated
@@ -59,7 +59,7 @@ dat <- join_stomach_data(path) |>
 #> fill_if_no_size = TRUE
 #> 
 #> Prey: 7,985 records | L/W params (unique AphiaIDs): species: 65, family: 39,
-#> order: 30, class: 56, phylum: 16, universal (a=0.01, b=3): 48
+#> order: 30, class: 58, phylum: 16, universal (a=0.01, b=3): 46
 #> |-- both weight and length recorded: 1,767 (22.1%)
 #> |-- one size recorded, other estimated: 6,099 (76.4%)
 #> | |-- had length, estimated weight via L/W: 24 (0.3%)

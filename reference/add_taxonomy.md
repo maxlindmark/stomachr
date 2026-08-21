@@ -3,9 +3,12 @@
 Left-joins scientific names and higher taxonomy (class, order, family,
 phylum) for both predators and prey using the bundled WoRMS lookup table
 ([worms_lookup](https://maxlindmark.github.io/stomachr/reference/worms_lookup.md),
-built in `data-raw/build_worms_lookup.R`). Prey with
-`aphia_id_prey = NA` in non-empty stomachs are labelled `"Unknown"` so
-their weight is not silently lost downstream.
+built in `data-raw/build_worms_lookup.R`). Prey with no resolved
+scientific name in non-empty stomachs – either `aphia_id_prey = NA` (no
+id recorded), or an id that isn't in
+[worms_lookup](https://maxlindmark.github.io/stomachr/reference/worms_lookup.md)
+– are labelled `"Unknown"` so their weight is not silently lost
+downstream.
 
 ## Usage
 
