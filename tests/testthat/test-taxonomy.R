@@ -8,15 +8,26 @@ test_that("add_taxonomy() smoke test", {
     "predator_scientific_name", "predator_class", "prey_scientific_name"
   ) %in% names(dat)))
 
-  # non-empty stomachs with no resolved prey name -- no id recorded at all,
-  # OR an id recorded that isn't in worms_lookup -- are labelled "Unknown",
-  # never left NA (this used to only cover the "no id at all" half; an id
-  # present but missing from worms_lookup silently stayed NA until fixed)
+  # non-empty stomachs with no resolved prey id are labelled "Unknown", never left NA
   no_id_not_empty <- is.na(dat$aphia_id_prey) & dat$stomach_status != "empty"
-  unmatched_id_not_empty <- !is.na(dat$aphia_id_prey) & is.na(dat$prey_rank) & dat$stomach_status != "empty"
-  expect_gt(sum(unmatched_id_not_empty), 0) # sanity: the example data has this case (3 ids not in worms_lookup)
   expect_true(all(dat$prey_scientific_name[no_id_not_empty] == "Unknown"))
-  expect_true(all(dat$prey_scientific_name[unmatched_id_not_empty] == "Unknown"))
+})
+
+# an id can be present but still missing from worms_lookup (a stale/incomplete
+# cache), which used to leave prey_scientific_name silently NA instead of
+# "Unknown". Uses a fabricated id rather than relying on the bundled example
+# data happening to have a real gap -- that gap closes whenever worms_lookup
+# gets refreshed, which would make a real-data version of this test flaky.
+test_that("add_taxonomy() labels a present-but-unmatched id as Unknown", {
+  toy <- tibble::tibble(
+    aphia_id_predator = NA_real_,
+    aphia_id_prey = -999999, # not a real AphiaID
+    stomach_status = "food"
+  )
+
+  out <- add_taxonomy(toy)
+
+  expect_equal(out$prey_scientific_name, "Unknown")
 })
 
 # a prey identified only to a rank coarser than family (e.g. "Polychaeta", a
