@@ -805,6 +805,13 @@ dup_hauls_by_country |>
   function in this package easier to understand (where we create
   pseudo-individuals and remove as many as are regurgitated).
 
+### 5. General points
+
+- Should impossible combinations be flagged during upload? For example,
+  check if `Regurgitated` \> `Number` (would catch the Swedish legacy
+  code), check if `IndWgt` \> prey weight, should it be possible to
+  populate `IndWgt` if `Number` \> 1?
+
 ## Open question: should a regurgitated stomach have prey content at all?
 
 It’s also worth asking why a truly regurgitated stomach would ever reach
