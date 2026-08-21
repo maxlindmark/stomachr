@@ -30,5 +30,7 @@ utils::globalVariables(c(
   "n_stomachs", "X", "Y", ".data",
   "ice_srectangle", "shoot_lat", "shoot_long", "ident_met", "grav_method",
   "prey_sequence", "unit_wgt", "weight", "unit_lngt", "other_items",
-  "other_count", "coords", "shoot_lat_imp", "shoot_long_imp"
+  "other_count", "coords", "shoot_lat_imp", "shoot_long_imp",
+  "number", "count_base", "count_remainder", ".copy_idx",
+  "other_count_base", "other_count_remainder"
 ))
