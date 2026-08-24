@@ -143,19 +143,34 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
     ))
   }
 
+  # PreySequence is documented as a unique ID per prey item within a
+  # predator. Rows that share every measured value (aphia_id_prey, count,
+  # weight, prey_length, digestion_stage) but have distinct prey_sequence
+  # values are NOT duplicates -- they're separately-logged prey items that
+  # happen to coincide (e.g. several same-species items sharing one
+  # weighed/averaged mass). A previous version of this function collapsed
+  # those via distinct(), which silently discarded real prey records.
+  # What *would* indicate a genuine duplicate/data-entry problem is the same
+  # (predator, prey_sequence) pair appearing more than once -- flag that
+  # instead of guessing which row (if either) is right.
+  n_seq_dup <- prey |>
+    dplyr::filter(!is.na(prey_sequence)) |>
+    dplyr::count(tbl_predator_information_id, prey_sequence) |>
+    dplyr::filter(n > 1) |>
+    nrow()
+  if (n_seq_dup > 0) {
+    cli::cli_warn(c(
+      "!" = "There are prey records that share the same (predator, PreySequence) pair, which should be unique. Check raw data.",
+      "i" = "{fmt_n(n_seq_dup)} duplicated (predator, PreySequence) {cli::qty(n_seq_dup)}pair{?s}"
+    ))
+  }
+
   prey <- prey |>
     dplyr::mutate(
       weight      = dplyr::if_else(unit_wgt == "mg", weight / 1000, weight),
       prey_length = dplyr::if_else(unit_lngt == "mm", prey_length / 10, prey_length)
     ) |>
     dplyr::select(-wgt_default, -lngt_default, -country) |>
-    # Some submissions (e.g. NL) contain exact triplicate prey rows with
-    # consecutive tbl_prey_information_id values; deduplicate before deriving.
-    dplyr::distinct(
-      tbl_predator_information_id, aphia_id_prey,
-      count, weight, prey_length, digestion_stage,
-      .keep_all = TRUE
-    ) |>
     dplyr::mutate(
       # 9999 is the ICES sentinel for "count not recorded"; unknown multiplicity
       # makes weight-per-individual undefined, so flag before nulling.
