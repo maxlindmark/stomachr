@@ -459,10 +459,16 @@ prey_dat <- lapply(regions, function(r) {
 #>   input errors. Check raw data.
 #> ℹ 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
+#> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
+#>   which should be unique. Check raw data.
+#> ℹ 13 duplicated (predator, PreySequence) pairs
 #> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
 #>   input errors. Check raw data.
 #> ℹ 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
+#> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
+#>   which should be unique. Check raw data.
+#> ℹ 374 duplicated (predator, PreySequence) pairs
 ```
 
 ``` r

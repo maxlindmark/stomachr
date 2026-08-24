@@ -510,10 +510,16 @@ ratio” even with no pooling artefact at all.</p>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
+<span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 13 duplicated (predator, PreySequence) pairs</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted</span></span>
-<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span></code></pre></div>
+<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
+<span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 374 duplicated (predator, PreySequence) pairs</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lw_a</span> <span class="op">&lt;-</span> <span class="fl">0.01</span></span>
 <span><span class="va">lw_b</span> <span class="op">&lt;-</span> <span class="fl">3</span></span>

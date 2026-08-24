@@ -107,6 +107,9 @@ dat <- join_stomach_data(path)
 #>   input errors. Check raw data.
 #> ℹ 2,705 of 8,886 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
+#> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
+#>   which should be unique. Check raw data.
+#> ℹ 3 duplicated (predator, PreySequence) pairs
 #> join_stomach_data(): 8,886 predator individuals
 #> ✔ 3,845 (43.3%) with identifiable prey
 #> ℹ 4,084 (46.0%) empty or regurgitated
@@ -222,21 +225,21 @@ dat <- impute_size(dat, which = "both", method = "lw_params", size = "both")
 #> impute_size(): which = "both" | method = "lw_params" | size = "both" |
 #> fill_if_no_size = TRUE
 #> 
-#> Prey: 7,985 records | L/W params (unique AphiaIDs): species: 65, family: 39,
+#> Prey: 8,007 records | L/W params (unique AphiaIDs): species: 65, family: 39,
 #> order: 30, class: 58, phylum: 16, universal (a=0.01, b=3): 46
-#> |-- both weight and length recorded: 1,767 (22.1%)
-#> |-- one size recorded, other estimated: 6,099 (76.4%)
+#> |-- both weight and length recorded: 1,775 (22.2%)
+#> |-- one size recorded, other estimated: 6,113 (76.3%)
 #> | |-- had length, estimated weight via L/W: 24 (0.3%)
-#> | +-- had weight, estimated length via L/W: 6,075 (76.1%)
+#> | +-- had weight, estimated length via L/W: 6,089 (76.0%)
 #> |-- no size recorded, imputed from other records: 115 (1.4%)
 #> | |-- same stomach: mean weight -> length via L/W: 8 (0.1%)
 #> | |-- same pred-prey pair: mean weight -> length via L/W: 104 (1.3%)
 #> | +-- global species mean: mean weight -> length via L/W: 3 (0.0%)
-#> +-- no size info in any record of that species: 4 (0.1%) (diet composition
+#> +-- no size info in any record of that species: 4 (0.0%) (diet composition
 #> only, weight unusable)
 #> 
-#> Predator: 13,935 rows | L/W params (unique AphiaIDs): species: 22, family: 1
-#> |-- weight and length observed: 13,935 (100.0%)
+#> Predator: 13,963 rows | L/W params (unique AphiaIDs): species: 22, family: 1
+#> |-- weight and length observed: 13,963 (100.0%)
 #> +-- weight observed, length missing: 0 (0.0%)
 #> 
 ```
@@ -269,7 +272,7 @@ examining `tbl_predator_information_id` in the raw data.
 ``` r
 
 dat <- sense_check(dat)
-#> sense_check(): 13,935 rows
+#> sense_check(): 13,963 rows
 #> ! prey longer than predator (same unit assumed): 1 row (0.0%) across 1 predator
 #>   tbl_predator_information_id: 110462
 #> ! total stomach content heavier than predator: 1 row (0.0%) across 1 predator
@@ -279,6 +282,6 @@ dat <- sense_check(dat)
 #>   data
 #> 
 dat <- drop_flagged(dat)
-#> ✔ drop_flagged(): removed 2 rows (0.01%), 13,933 remaining
+#> ✔ drop_flagged(): removed 2 rows (0.01%), 13,961 remaining
 #> 
 ```

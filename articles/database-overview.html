@@ -107,10 +107,16 @@ Arctic drift expedition), are not used.</p>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
+<span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 13 duplicated (predator, PreySequence) pairs</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted</span></span>
-<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span></code></pre></div>
+<span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
+<span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
+<span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 374 duplicated (predator, PreySequence) pairs</span></span></code></pre></div>
 <p>We only need <code><a href="../reference/join_stomach_data.html">join_stomach_data()</a></code> here (year, country,
 and coordinates are already attached to every predator, and we’re
 looking at database coverage rather than diet composition). We also
