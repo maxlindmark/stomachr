@@ -471,6 +471,52 @@ ggplot() +
   - **Norway**: not pooling. Each row is one individually-measured fish, indicated by `IndWgt` being populated and matching up with a single individual, `Regurgitated`/`StomachEmpty` are capped at 0/1 like any single-fish record, and dividing prey weight by `Number` makes the per-fish rate *worse*, not better. This really suggests its a data entry error. 
 - **Fix applied in the example vignettes**: `number = dplyr::if_else(country == "NO", 1, number)`. This keeps Norway's already-one-fish-per-row records untouched by `unpool_predators()`, which after this fix only ever expands genuine Netherlands pooling.
 
+### 7. `PreySequence` isn't always unique within a predator
+
+Documented as a unique ID per prey item within one predator, but it isn't always -- usually because two genuinely *different* prey species end up sharing the same `PreySequence` value, not because one item was entered twice.
+
+```{r prey-sequence-diagnostic, eval = TRUE, message = FALSE}
+prey_seq_dat <- lapply(regions, function(r) {
+  path <- tempfile()
+  download_stomach(path, ecoregion = r)
+  fi <- readr::read_csv(file.path(path, "File_information.csv"), show_col_types = FALSE) |>
+    janitor::clean_names() |>
+    transmute(tbl_upload_id = as.character(tbl_upload_id), country = as.character(country))
+  readr::read_csv(
+    file.path(path, "PreyInformation.csv"),
+    col_types = readr::cols(PreySequence = readr::col_character()), show_col_types = FALSE
+  ) |>
+    janitor::clean_names() |>
+    transmute(
+      tbl_upload_id = as.character(tbl_upload_id),
+      tbl_predator_information_id = as.character(tbl_predator_information_id),
+      prey_sequence, aphia_id_prey = as.numeric(aphia_id_prey)
+    ) |>
+    left_join(fi, by = "tbl_upload_id")
+}) |>
+  bind_rows()
+
+dup_seq <- prey_seq_dat |>
+  filter(!is.na(prey_sequence)) |>
+  count(tbl_predator_information_id, prey_sequence) |>
+  filter(n > 1)
+
+dup_rows <- prey_seq_dat |> semi_join(dup_seq, by = c("tbl_predator_information_id", "prey_sequence"))
+n_species <- dup_rows |> summarise(n_species = n_distinct(aphia_id_prey), .by = c(tbl_predator_information_id, prey_sequence))
+
+cat(
+  "duplicated (predator, PreySequence) pairs:", nrow(dup_seq), "\n",
+  "-- different species sharing one slot:", sum(n_species$n_species > 1), "\n",
+  "-- same species repeated under one slot:", sum(n_species$n_species == 1), "\n"
+)
+
+dup_rows |> distinct(tbl_predator_information_id, country) |> count(country, sort = TRUE)
+```
+
+- Almost entirely one country's uploads, and almost entirely different species sharing one slot rather than a repeated entry of the same one.
+- `join_stomach_data()` flags this (a `cli_warn()` naming the duplicated pair count) but keeps every row -- there's no way to tell from the data alone which entry (if either) is wrong, so nothing is dropped or renumbered automatically.
+- **No fix applied in the example vignettes**: unlike the other entries here, this doesn't corrupt anything downstream by itself (every prey row still gets attributed to the right predator) -- it just means `PreySequence` can't be trusted as a real unique key.
+
 ## Limitations in the ICES format documentation
 
 Field descriptions are from [datsu.ices.dk/web/selRep.aspx?Dataset=157](https://datsu.ices.dk/web/selRep.aspx?Dataset=157) (Stomach Content dataset, Predator Information record), current as of 2026-08-20.
@@ -576,7 +622,30 @@ dup_hauls_by_country |>
 - `Regurgitated`: *"Number of stomachs regurgitated"* (no "in the sample"). This is mainly a wording inconsistency.
 - Both are counts relative to `Number`, consistent with `Number`'s own "(pooled samples)" note. It's worth stating explicitly, since the convention among many analysts seems to be that `Regurgitated` is a 0/1 flag rather than a count. Could it be that countries that **do not** upload pooled stomachs treat it as a binary? It doesn't really matter if all they do is upload non-pooled stomachs. But it helps understand the columns, and make the `unpool_predators()` function in this package easier to understand (where we create pseudo-individuals and remove as many as are regurgitated).
 
-### 5. General points
+### 5. `SubFactor`: meaning undocumented, and never applied in this package
+
+*"SubFactor"*. Is it subsampling of stomach contents of predators for stomach analysis? further description given. Populated on most prey rows, but `stomachr` currently just carries it through unchanged; nothing multiplies `count`/`weight` by it.
+
+```{r subfactor-diagnostic, eval = TRUE, message = FALSE}
+subfactor_dat <- lapply(regions, function(r) {
+  path <- tempfile()
+  download_stomach(path, ecoregion = r)
+  readr::read_csv(file.path(path, "PreyInformation.csv"), show_col_types = FALSE) |>
+    janitor::clean_names() |>
+    transmute(sub_factor = as.numeric(sub_factor))
+}) |>
+  bind_rows()
+
+cat(
+  "non-NA SubFactor:", sum(!is.na(subfactor_dat$sub_factor)), "of", nrow(subfactor_dat), "rows\n",
+  "distinct non-NA values:", paste(sort(unique(subfactor_dat$sub_factor)), collapse = ", "), "\n"
+)
+```
+
+- Every populated value seen so far is exactly `1`, so for now it doesn't do anything.
+- **No fix applied**: unclear what to do with values that are not 1 if they appear.
+
+### 6. General points
 - Should impossible combinations be flagged during upload? For example, check if `Regurgitated` > `Number` (would catch the Swedish legacy code), check if `IndWgt` > prey weight, should it be possible to populate `IndWgt` if `Number` > 1?
 
 ## Open question: should a regurgitated stomach have prey content at all?
