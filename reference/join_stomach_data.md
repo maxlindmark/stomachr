@@ -35,3 +35,12 @@ join_stomach_data(path, impute_coords = TRUE)
 
 A tibble with one row per prey record per predator. Empty and
 unidentified stomachs contribute one `NA` prey row each.
+
+## Details
+
+A prey row that's entirely blank (`AphiaIDPrey`, `Weight`, `Count`,
+`DigestionStage` all `NA`) is how the raw export gives an empty stomach
+a row in `PreyInformation.csv`, rather than a real but unidentified prey
+item. It's excluded before classification, so a stomach whose only
+"prey" is such a placeholder is classified `"empty"`, not
+`"unidentified"`.

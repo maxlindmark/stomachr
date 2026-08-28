@@ -100,7 +100,13 @@ regurgitated") is apportioned the same way but capped at 0/1 per
 copy – for <code>Number = 10, Regurgitated = 3</code>, 3 of the 10 copies get
 <code>regurgitated = 1</code> and 7 get <code>0</code>, so a subsequent <code><a href="drop_invalid.html">drop_invalid()</a></code>
 drops exactly the right fraction instead of the whole group or none
-of it. Predator-level fields (<code>pred_length</code>, <code>predator_weight</code>, etc.)
+of it. <code>stomach_empty</code> (DATSU: "Number of empty stomachs in the
+sample") is also a per-pool count, but unlike <code>regurgitated</code> an empty
+individual gets its own no-prey copy rather than a flag on an
+existing one: <code>count</code>/<code>weight</code>/<code>other_count</code> are apportioned across
+<code>Number - stomach_empty</code> fed copies instead of <code>Number</code>, and
+<code>stomach_empty</code> further copies are added with every prey-level field
+<code>NA</code> and <code>stomach_status = "empty"</code>. Predator-level fields (<code>pred_length</code>, <code>predator_weight</code>, etc.)
 are unchanged and repeated across copies – these are <code>Number</code>
 identical copies of one averaged fish, not independent observations.
 Fine for totals and for correctly weighting a pooled group's diet

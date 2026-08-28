@@ -112,8 +112,8 @@ dat <- join_stomach_data(path)
 #> ℹ 3 duplicated (predator, PreySequence) pairs
 #> join_stomach_data(): 8,886 predator individuals
 #> ✔ 3,845 (43.3%) with identifiable prey
-#> ℹ 4,084 (46.0%) empty or regurgitated
-#> ℹ 957 (10.8%) with prey records but no prey species ID
+#> ℹ 4,702 (52.9%) empty or regurgitated
+#> ℹ 339 (3.8%) with prey records but no prey species ID
 #>   (cannot contribute to diet composition but can contribute to total prey
 #>   weight)
 #> ℹ 0 haul locations imputed from ICES rectangle midpoint
@@ -156,13 +156,17 @@ individual predator.
 
 - `method = "uncount"` (default): expands each pooled record into
   `Number` rows (one pseudo-individual per implied fish), distributing
-  `count`/`weight`/`regurgitated` so they sum back to the original
-  totals (Example: for `Number = 10, Regurgitated = 3`, 3 of the 10
-  copies get `regurgitated = 1`, so
+  `count`/`weight`/`regurgitated`/`stomach_empty` so they sum back to
+  the original totals. `regurgitated` (Example:
+  `Number = 10, Regurgitated = 3`) flags 3 of the 10 copies as
+  `regurgitated = 1`, so
   [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
-  below drops exactly those 3, not all 10 or none). Note, these aren’t
-  independent observations, so treat them accordingly for anything
-  computing per-individual variance.
+  below drops exactly those 3, not all 10 or none. `stomach_empty`
+  (Example: `Number = 10, StomachEmpty = 3`) instead gives 3 of the 10
+  copies their own no-prey row (`stomach_status = "empty"`), with
+  `count`/`weight` for the other 7 apportioned across just those 7 fed
+  copies, not all 10. Note, these aren’t independent observations, so
+  treat them accordingly for anything computing per-individual variance.
 - `method = "filter"`: drops `Number > 1` records outright instead.
 
 This has to run before

@@ -174,8 +174,8 @@ affected are printed by the function.</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3 duplicated (predator, PreySequence) pairs</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 8,886 predator individuals</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> 3,845 (43.3%) with identifiable prey</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,084 (46.0%) empty or regurgitated</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 957 (10.8%) with prey records but no prey species ID</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,702 (52.9%) empty or regurgitated</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 339 (3.8%) with prey records but no prey species ID</span></span>
 <span><span class="co">#&gt;   (cannot contribute to diet composition but can contribute to total prey</span></span>
 <span><span class="co">#&gt;   weight)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 0 haul locations imputed from ICES rectangle midpoint</span></span>
@@ -218,11 +218,16 @@ or expanded, so that 1 row = 1 individual predator.</p>
 <code>method = "uncount"</code> (default): expands each pooled
 record into <code>Number</code> rows (one pseudo-individual per implied
 fish), distributing
-<code>count</code>/<code>weight</code>/<code>regurgitated</code> so they
-sum back to the original totals (Example: for
-<code>Number = 10, Regurgitated = 3</code>, 3 of the 10 copies get
-<code>regurgitated = 1</code>, so <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code> below
-drops exactly those 3, not all 10 or none). Note, these aren’t
+<code>count</code>/<code>weight</code>/<code>regurgitated</code>/<code>stomach_empty</code>
+so they sum back to the original totals. <code>regurgitated</code>
+(Example: <code>Number = 10, Regurgitated = 3</code>) flags 3 of the 10
+copies as <code>regurgitated = 1</code>, so <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>
+below drops exactly those 3, not all 10 or none.
+<code>stomach_empty</code> (Example:
+<code>Number = 10, StomachEmpty = 3</code>) instead gives 3 of the 10
+copies their own no-prey row (<code>stomach_status = "empty"</code>),
+with <code>count</code>/<code>weight</code> for the other 7 apportioned
+across just those 7 fed copies, not all 10. Note, these aren’t
 independent observations, so treat them accordingly for anything
 computing per-individual variance.</li>
 <li>

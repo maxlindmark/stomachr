@@ -37,8 +37,8 @@ dat <- join_stomach_data(path) |>
 #> ℹ 3 duplicated (predator, PreySequence) pairs
 #> join_stomach_data(): 8,886 predator individuals
 #> ✔ 3,845 (43.3%) with identifiable prey
-#> ℹ 4,084 (46.0%) empty or regurgitated
-#> ℹ 957 (10.8%) with prey records but no prey species ID
+#> ℹ 4,702 (52.9%) empty or regurgitated
+#> ℹ 339 (3.8%) with prey records but no prey species ID
 #>   (cannot contribute to diet composition but can contribute to total prey
 #>   weight)
 #> ℹ 0 haul locations imputed from ICES rectangle midpoint

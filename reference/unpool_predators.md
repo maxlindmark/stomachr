@@ -54,13 +54,19 @@ unpool_predators(dat, method = c("uncount", "filter"))
     `regurgitated = 1` and 7 get `0`, so a subsequent
     [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
     drops exactly the right fraction instead of the whole group or none
-    of it. Predator-level fields (`pred_length`, `predator_weight`,
-    etc.) are unchanged and repeated across copies – these are `Number`
-    identical copies of one averaged fish, not independent observations.
-    Fine for totals and for correctly weighting a pooled group's diet
-    pattern by how many fish it represents; not fine if something later
-    computes per-individual *variance* and would treat the copies as
-    independent samples.
+    of it. `stomach_empty` (DATSU: "Number of empty stomachs in the
+    sample") is also a per-pool count, but unlike `regurgitated` an
+    empty individual gets its own no-prey copy rather than a flag on an
+    existing one: `count`/`weight`/`other_count` are apportioned across
+    `Number - stomach_empty` fed copies instead of `Number`, and
+    `stomach_empty` further copies are added with every prey-level field
+    `NA` and `stomach_status = "empty"`. Predator-level fields
+    (`pred_length`, `predator_weight`, etc.) are unchanged and repeated
+    across copies – these are `Number` identical copies of one averaged
+    fish, not independent observations. Fine for totals and for
+    correctly weighting a pooled group's diet pattern by how many fish
+    it represents; not fine if something later computes per-individual
+    *variance* and would treat the copies as independent samples.
 
   - `"filter"`: drops every record with `Number > 1` outright, keeping
     only genuine single-fish records. Simpler, loses the pooled fraction

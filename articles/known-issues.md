@@ -654,6 +654,75 @@ keeps Norway’s already-one-fish-per-row records untouched by
 [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md),
 which after this fix only ever expands genuine Netherlands pooling.
 
+### 7. `PreySequence` isn’t always unique within a predator
+
+Documented as a unique ID per prey item within one predator, but it
+isn’t always – usually because two genuinely *different* prey species
+end up sharing the same `PreySequence` value, not because one item was
+entered twice.
+
+``` r
+
+prey_seq_dat <- lapply(regions, function(r) {
+  path <- tempfile()
+  download_stomach(path, ecoregion = r)
+  fi <- readr::read_csv(file.path(path, "File_information.csv"), show_col_types = FALSE) |>
+    janitor::clean_names() |>
+    transmute(tbl_upload_id = as.character(tbl_upload_id), country = as.character(country))
+  readr::read_csv(
+    file.path(path, "PreyInformation.csv"),
+    col_types = readr::cols(PreySequence = readr::col_character()), show_col_types = FALSE
+  ) |>
+    janitor::clean_names() |>
+    transmute(
+      tbl_upload_id = as.character(tbl_upload_id),
+      tbl_predator_information_id = as.character(tbl_predator_information_id),
+      prey_sequence, aphia_id_prey = as.numeric(aphia_id_prey)
+    ) |>
+    left_join(fi, by = "tbl_upload_id")
+}) |>
+  bind_rows()
+#> Warning: One or more parsing issues, call `problems()` on your data frame for details,
+#> e.g.:
+#>   dat <- vroom(...)
+#>   problems(dat)
+
+dup_seq <- prey_seq_dat |>
+  filter(!is.na(prey_sequence)) |>
+  count(tbl_predator_information_id, prey_sequence) |>
+  filter(n > 1)
+
+dup_rows <- prey_seq_dat |> semi_join(dup_seq, by = c("tbl_predator_information_id", "prey_sequence"))
+n_species <- dup_rows |> summarise(n_species = n_distinct(aphia_id_prey), .by = c(tbl_predator_information_id, prey_sequence))
+
+cat(
+  "duplicated (predator, PreySequence) pairs:", nrow(dup_seq), "\n",
+  "-- different species sharing one slot:", sum(n_species$n_species > 1), "\n",
+  "-- same species repeated under one slot:", sum(n_species$n_species == 1), "\n"
+)
+#> duplicated (predator, PreySequence) pairs: 387 
+#>  -- different species sharing one slot: 362 
+#>  -- same species repeated under one slot: 25
+
+dup_rows |> distinct(tbl_predator_information_id, country) |> count(country, sort = TRUE)
+#> # A tibble: 2 × 2
+#>   country     n
+#>   <chr>   <int>
+#> 1 NL        354
+#> 2 BE          3
+```
+
+- Almost entirely one country’s uploads, and almost entirely different
+  species sharing one slot rather than a repeated entry of the same one.
+- [`join_stomach_data()`](https://maxlindmark.github.io/stomachr/reference/join_stomach_data.md)
+  flags this (a `cli_warn()` naming the duplicated pair count) but keeps
+  every row – there’s no way to tell from the data alone which entry (if
+  either) is wrong, so nothing is dropped or renumbered automatically.
+- **No fix applied in the example vignettes**: unlike the other entries
+  here, this doesn’t corrupt anything downstream by itself (every prey
+  row still gets attributed to the right predator) – it just means
+  `PreySequence` can’t be trusted as a real unique key.
+
 ## Limitations in the ICES format documentation
 
 Field descriptions are from
@@ -811,7 +880,42 @@ dup_hauls_by_country |>
   function in this package easier to understand (where we create
   pseudo-individuals and remove as many as are regurgitated).
 
-### 5. General points
+### 5. `SubFactor`: meaning undocumented, and never applied in this package
+
+*“SubFactor”*. Is it subsampling of stomach contents of predators for
+stomach analysis? further description given. Populated on most prey
+rows, but `stomachr` currently just carries it through unchanged;
+nothing multiplies `count`/`weight` by it.
+
+``` r
+
+subfactor_dat <- lapply(regions, function(r) {
+  path <- tempfile()
+  download_stomach(path, ecoregion = r)
+  readr::read_csv(file.path(path, "PreyInformation.csv"), show_col_types = FALSE) |>
+    janitor::clean_names() |>
+    transmute(sub_factor = as.numeric(sub_factor))
+}) |>
+  bind_rows()
+#> Warning: One or more parsing issues, call `problems()` on your data frame for details,
+#> e.g.:
+#>   dat <- vroom(...)
+#>   problems(dat)
+
+cat(
+  "non-NA SubFactor:", sum(!is.na(subfactor_dat$sub_factor)), "of", nrow(subfactor_dat), "rows\n",
+  "distinct non-NA values:", paste(sort(unique(subfactor_dat$sub_factor)), collapse = ", "), "\n"
+)
+#> non-NA SubFactor: 29438 of 186418 rows
+#>  distinct non-NA values: 1
+```
+
+- Every populated value seen so far is exactly `1`, so for now it
+  doesn’t do anything.
+- **No fix applied**: unclear what to do with values that are not 1 if
+  they appear.
+
+### 6. General points
 
 - Should impossible combinations be flagged during upload? For example,
   check if `Regurgitated` \> `Number` (would catch the Swedish legacy
