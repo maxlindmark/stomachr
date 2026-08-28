@@ -32,5 +32,5 @@ utils::globalVariables(c(
   "prey_sequence", "unit_wgt", "weight", "unit_lngt", "other_items",
   "other_count", "coords", "shoot_lat_imp", "shoot_long_imp",
   "number", "count_base", "count_remainder", ".copy_idx",
-  "other_count_base", "other_count_remainder"
+  "other_count_base", "other_count_remainder", ".n_fed"
 ))

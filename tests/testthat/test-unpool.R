@@ -40,6 +40,42 @@ test_that("unpool_predators() works with numeric predator ids (regression test)"
   expect_type(out$tbl_predator_information_id, "character")
 })
 
+# a pool with a nonzero StomachEmpty count alongside real prey rows should
+# split into fed + empty copies, not apportion the prey across every fish
+test_that("unpool_predators() allocates stomach_empty separately from fed copies", {
+  # Number = 10, StomachEmpty = 3: 2 prey-item rows for the same pool,
+  # 7 fed fish should split the prey, 3 more fish get their own empty row
+  toy <- tibble::tibble(
+    tbl_predator_information_id = c(1, 1),
+    number = c(10, 10),
+    stomach_empty = c(3, 3),
+    stomach_status = c("food", "food"),
+    aphia_id_prey = c(101, 102),
+    count = c(7, 14),
+    prey_weight_ind = c(1, 0.5),
+    weight = c(7, 7),
+    other_count = c(NA, NA),
+    other_wgt = c(NA, NA),
+    regurgitated = c(0, 0)
+  )
+
+  out <- unpool_predators(toy, method = "uncount")
+
+  expect_equal(dplyr::n_distinct(out$tbl_predator_information_id), 10)
+
+  empty_rows <- out |> dplyr::filter(stomach_status == "empty")
+  expect_equal(dplyr::n_distinct(empty_rows$tbl_predator_information_id), 3)
+  expect_true(all(is.na(empty_rows$aphia_id_prey)))
+  expect_true(all(is.na(empty_rows$weight)))
+
+  fed_rows <- out |> dplyr::filter(stomach_status == "food")
+  expect_equal(dplyr::n_distinct(fed_rows$tbl_predator_information_id), 7)
+  # count/weight apportioned across the 7 fed fish, not all 10 -- sums back
+  # to the original pooled totals either way
+  expect_equal(sum(fed_rows$count[fed_rows$aphia_id_prey == 101]), 7)
+  expect_equal(sum(fed_rows$count[fed_rows$aphia_id_prey == 102]), 14)
+})
+
 # expanding real pooled records should turn every "number > 1" fish into several single fish
 test_that("unpool_predators() smoke test on real (partly pooled) data", {
   # sanity check that this fixture is actually pooled, or the test below

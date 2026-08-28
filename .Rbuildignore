@@ -9,3 +9,5 @@
 ^inst/Presentation
 ^CLAUDE\.md$
 ^my-scripts$
+^doc$
+^Meta$

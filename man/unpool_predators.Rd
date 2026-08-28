@@ -27,7 +27,13 @@ regurgitated") is apportioned the same way but capped at 0/1 per
 copy -- for \verb{Number = 10, Regurgitated = 3}, 3 of the 10 copies get
 \code{regurgitated = 1} and 7 get \code{0}, so a subsequent \code{drop_invalid()}
 drops exactly the right fraction instead of the whole group or none
-of it. Predator-level fields (\code{pred_length}, \code{predator_weight}, etc.)
+of it. \code{stomach_empty} (DATSU: "Number of empty stomachs in the
+sample") is also a per-pool count, but unlike \code{regurgitated} an empty
+individual gets its own no-prey copy rather than a flag on an
+existing one: \code{count}/\code{weight}/\code{other_count} are apportioned across
+\code{Number - stomach_empty} fed copies instead of \code{Number}, and
+\code{stomach_empty} further copies are added with every prey-level field
+\code{NA} and \code{stomach_status = "empty"}. Predator-level fields (\code{pred_length}, \code{predator_weight}, etc.)
 are unchanged and repeated across copies -- these are \code{Number}
 identical copies of one averaged fish, not independent observations.
 Fine for totals and for correctly weighting a pooled group's diet

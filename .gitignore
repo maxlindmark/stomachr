@@ -11,3 +11,5 @@ inst/*
 !inst/extdata/**
 !inst/CITATION
 docs
+/doc/
+/Meta/

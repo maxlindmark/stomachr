@@ -13,6 +13,13 @@
 #' `vignette("known-issues", package = "stomachr")` for worked examples of
 #' what these have caught in the live database.
 #'
+#' A prey row that's entirely blank (`AphiaIDPrey`, `Weight`, `Count`,
+#' `DigestionStage` all `NA`) is how the raw export gives an empty stomach a
+#' row in `PreyInformation.csv`, rather than a real but unidentified
+#' prey item. It's excluded before classification, so a stomach whose only
+#' "prey" is such a placeholder is classified `"empty"`, not
+#' `"unidentified"`.
+#'
 #' @param path Path to the directory containing the four ICES CSV files.
 #' @param impute_coords If `TRUE` (default), missing `lat`/`lon` are imputed
 #'   from the ICES rectangle midpoint via [mapplots::ices.rect()].
@@ -76,8 +83,15 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
   }
 
   # Classify stomach status before the prey join so the distinction between
-  # truly empty stomachs and unidentified-only stomachs is not lost.
-  prey_status <- prey |>
+  # truly empty stomachs and unidentified-only stomachs is not lost. A
+  # placeholder prey row (AphiaIDPrey, Weight, Count, DigestionStage all NA)
+  # is how the raw export gives an empty stomach a row in PreyInformation.csv
+  # at all -- it carries no evidence of food and must not count as one, or a
+  # genuinely empty stomach is classified "unidentified" instead of "empty".
+  real_prey <- prey |>
+    dplyr::filter(!(is.na(aphia_id_prey) & is.na(weight) & is.na(count) & is.na(digestion_stage)))
+
+  prey_status <- real_prey |>
     dplyr::summarise(
       n_prey_rows = dplyr::n(),
       n_unidentified = sum(is.na(aphia_id_prey)),

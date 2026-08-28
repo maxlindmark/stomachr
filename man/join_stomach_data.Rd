@@ -30,3 +30,11 @@ fixes anything, both are raw-data sanity checks -- see
 \code{vignette("known-issues", package = "stomachr")} for worked examples of
 what these have caught in the live database.
 }
+\details{
+A prey row that's entirely blank (\code{AphiaIDPrey}, \code{Weight}, \code{Count},
+\code{DigestionStage} all \code{NA}) is how the raw export gives an empty stomach a
+row in \code{PreyInformation.csv}, rather than a real but unidentified
+prey item. It's excluded before classification, so a stomach whose only
+"prey" is such a placeholder is classified \code{"empty"}, not
+\code{"unidentified"}.
+}

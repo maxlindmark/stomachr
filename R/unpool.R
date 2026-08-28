@@ -29,7 +29,13 @@
 #'     copy -- for `Number = 10, Regurgitated = 3`, 3 of the 10 copies get
 #'     `regurgitated = 1` and 7 get `0`, so a subsequent `drop_invalid()`
 #'     drops exactly the right fraction instead of the whole group or none
-#'     of it. Predator-level fields (`pred_length`, `predator_weight`, etc.)
+#'     of it. `stomach_empty` (DATSU: "Number of empty stomachs in the
+#'     sample") is also a per-pool count, but unlike `regurgitated` an empty
+#'     individual gets its own no-prey copy rather than a flag on an
+#'     existing one: `count`/`weight`/`other_count` are apportioned across
+#'     `Number - stomach_empty` fed copies instead of `Number`, and
+#'     `stomach_empty` further copies are added with every prey-level field
+#'     `NA` and `stomach_status = "empty"`. Predator-level fields (`pred_length`, `predator_weight`, etc.)
 #'     are unchanged and repeated across copies -- these are `Number`
 #'     identical copies of one averaged fish, not independent observations.
 #'     Fine for totals and for correctly weighting a pooled group's diet
@@ -89,16 +95,32 @@ unpool_predators <- function(dat, method = c("uncount", "filter")) {
     return(not_pooled)
   }
 
-  rep_idx <- rep(seq_len(nrow(pooled)), times = pooled$number)
-  copy_idx <- unlist(lapply(pooled$number, seq_len), use.names = FALSE)
+  # `StomachEmpty` (carried through as `stomach_empty`, DATSU: "Number of
+  # empty stomachs in the sample") is a per-pool count, like `regurgitated`:
+  # only `number - stomach_empty` of a pool's individuals actually
+  # contributed the prey rows attached to this record, so count/weight are
+  # apportioned across that fed count, not `number`. The `stomach_empty`
+  # individuals themselves get their own no-prey copies below, since an
+  # empty individual needs a whole separate row, not a flag on an existing
+  # one (unlike `regurgitated`).
+  stomach_empty <- if ("stomach_empty" %in% names(pooled)) {
+    pmin(dplyr::coalesce(pooled$stomach_empty, 0), pooled$number)
+  } else {
+    rep(0, nrow(pooled))
+  }
+  n_fed <- pooled$number - stomach_empty
+
+  rep_idx <- rep(seq_len(nrow(pooled)), times = n_fed)
+  copy_idx <- unlist(lapply(n_fed, seq_len), use.names = FALSE)
 
   expanded <- pooled[rep_idx, ]
   expanded$.copy_idx <- copy_idx
+  expanded$.n_fed <- n_fed[rep_idx]
 
   expanded <- expanded |>
     dplyr::mutate(
-      count_base = count %/% number,
-      count_remainder = count %% number,
+      count_base = count %/% .n_fed,
+      count_remainder = count %% .n_fed,
       count = dplyr::if_else(
         is.na(count),
         NA_integer_,
@@ -106,17 +128,17 @@ unpool_predators <- function(dat, method = c("uncount", "filter")) {
       ),
       weight = dplyr::if_else(
         is.na(prey_weight_ind) | is.na(count),
-        weight / number,
+        weight / .n_fed,
         prey_weight_ind * count
       ),
-      other_count_base = other_count %/% number,
-      other_count_remainder = other_count %% number,
+      other_count_base = other_count %/% .n_fed,
+      other_count_remainder = other_count %% .n_fed,
       other_count = dplyr::if_else(
         is.na(other_count),
         NA_integer_,
         as.integer(other_count_base + dplyr::if_else(.copy_idx <= other_count_remainder, 1L, 0L))
       ),
-      other_wgt = other_wgt / number,
+      other_wgt = other_wgt / .n_fed,
       # Regurgitated is a per-group count (DATSU: "Number of stomachs
       # regurgitated"), not a per-individual flag -- apportion it the same
       # direction as count/other_count, but capped at one regurgitated
@@ -133,7 +155,42 @@ unpool_predators <- function(dat, method = c("uncount", "filter")) {
       tbl_predator_information_id = paste0(tbl_predator_information_id, "_", .copy_idx),
       unpooled = TRUE
     ) |>
-    dplyr::select(-count_base, -count_remainder, -other_count_base, -other_count_remainder, -.copy_idx)
+    dplyr::select(-count_base, -count_remainder, -other_count_base, -other_count_remainder, -.copy_idx, -.n_fed)
+
+  # `stomach_empty` individuals: one no-prey row each. A pooled record can
+  # have several original prey-item rows (one per prey species) -- reduce to
+  # one row per predator first, so the empty copies don't duplicate per
+  # prey item, then clear every prey-level field.
+  prey_cols <- intersect(names(pooled), c(
+    "tbl_prey_information_id", "aphia_id_prey", "ident_met", "digestion_stage",
+    "grav_method", "sub_factor", "prey_sequence", "count", "unit_wgt", "weight",
+    "unit_lngt", "prey_length", "other_items", "other_count", "other_wgt",
+    "analysing_org", "count_censored", "prey_weight_ind",
+    "prey_scientific_name", "prey_class", "prey_order", "prey_family", "prey_phylum"
+  ))
+
+  has_stomach_empty <- stomach_empty > 0
+  if (any(has_stomach_empty)) {
+    empty_base <- pooled[has_stomach_empty, ]
+    empty_base$.stomach_empty <- stomach_empty[has_stomach_empty]
+    empty_base <- dplyr::distinct(empty_base, tbl_predator_information_id, .keep_all = TRUE)
+
+    se_rep_idx <- rep(seq_len(nrow(empty_base)), times = empty_base$.stomach_empty)
+    se_copy_idx <- unlist(lapply(empty_base$.stomach_empty, seq_len), use.names = FALSE)
+
+    empty_expanded <- empty_base[se_rep_idx, ]
+    empty_expanded[prey_cols] <- NA
+    empty_expanded <- empty_expanded |>
+      dplyr::mutate(
+        stomach_status = "empty",
+        regurgitated = 0,
+        tbl_predator_information_id = paste0(tbl_predator_information_id, "_stomEmpty", se_copy_idx),
+        unpooled = TRUE,
+        .stomach_empty = NULL
+      )
+
+    expanded <- dplyr::bind_rows(expanded, empty_expanded)
+  }
 
   dat <- dplyr::bind_rows(not_pooled, expanded)
   dat$number <- 1L
