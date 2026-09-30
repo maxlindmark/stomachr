@@ -1,5 +1,5 @@
 path <- system.file("extdata", package = "stomachr")
-dat <- join_stomach_data(path) |> add_taxonomy()
+dat <- join_example(path) |> add_taxonomy()
 
 # adding species names/taxonomy shouldn't leave any non-empty stomach's prey name blank
 test_that("add_taxonomy() smoke test", {

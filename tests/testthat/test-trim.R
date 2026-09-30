@@ -1,7 +1,6 @@
 path <- system.file("extdata", package = "stomachr")
-dat <- join_stomach_data(path) |>
+dat <- join_example(path) |>
   add_taxonomy() |>
-  unpool_predators() |>
   drop_invalid() |>
   impute_size()
 
