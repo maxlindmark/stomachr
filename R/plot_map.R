@@ -27,6 +27,13 @@ plot_map <- function(dat,
   pred_only <- dat |>
     dplyr::distinct(tbl_predator_information_id, .keep_all = TRUE) |>
     dplyr::filter(!is.na(lat), !is.na(lon))
+  pred_only$.n <- if ("n_stomachs" %in% names(pred_only)) {
+    pred_only$n_stomachs
+  } else if ("number" %in% names(pred_only)) {
+    dplyr::coalesce(pred_only$number, 1)
+  } else {
+    1
+  }
 
   # The top-species filter only makes sense (and only needs
   # predator_scientific_name to exist) when species is actually what's being
@@ -35,7 +42,7 @@ plot_map <- function(dat,
   if ("predator_scientific_name" %in% c(color, facet)) {
     if (is.null(species)) {
       species <- pred_only |>
-        dplyr::count(predator_scientific_name, sort = TRUE) |>
+        dplyr::count(predator_scientific_name, wt = .n, sort = TRUE) |>
         dplyr::slice_head(n = 8) |>
         dplyr::pull(predator_scientific_name)
     }
@@ -44,7 +51,7 @@ plot_map <- function(dat,
 
   group_cols <- unique(c("lon", "lat", color, facet))
   plot_dat <- pred_only |>
-    dplyr::count(dplyr::across(dplyr::all_of(group_cols)), name = "n_stomachs")
+    dplyr::count(dplyr::across(dplyr::all_of(group_cols)), wt = .n, name = "n_stomachs")
 
   color_scale <- if (is.numeric(plot_dat[[color]])) {
     ggplot2::scale_color_viridis_c()

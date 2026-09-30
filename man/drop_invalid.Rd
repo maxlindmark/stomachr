@@ -2,20 +2,42 @@
 % Please edit documentation in R/drop.R
 \name{drop_invalid}
 \alias{drop_invalid}
-\title{Drop invalid (regurgitated) predator records}
+\title{Drop regurgitated stomachs and count usable stomachs per record}
 \usage{
 drop_invalid(dat, na_regurgitated = "keep")
 }
 \arguments{
-\item{dat}{Tibble from \code{\link[=join_stomach_data]{join_stomach_data()}}.}
+\item{dat}{Tibble from \code{\link[=join_stomach_data]{join_stomach_data()}} or \code{\link[=add_taxonomy]{add_taxonomy()}}.}
 
 \item{na_regurgitated}{\code{"keep"} (default) treats \code{NA} as not regurgitated;
-\code{"drop"} treats \code{NA} as regurgitated.}
+\code{"drop"} drops records with \code{regurgitated = NA}.}
 }
 \value{
-\code{dat} with regurgitated predators removed.
+\code{dat} with regurgitated-only records removed and \code{n_stomachs} and
+\code{n_empty} columns added.
 }
 \description{
-Removes predators where \code{regurgitated >= 1}. Stomach contents of regurgitated
-fish are scientifically unusable for diet analysis.
+A predator record can describe a pooled sample of \code{number} fish, and
+\code{regurgitated} is the number of those stomachs that were regurgitated.
+This function adds:
+}
+\details{
+\itemize{
+\item \code{n_stomachs}: usable stomachs behind the record, \code{number - regurgitated}
+(\code{number = NA} is treated as \code{1}).
+\item \code{n_empty}: how many of those \code{n_stomachs} were empty. \code{n_stomachs} if
+the record has no prey (\code{stomach_status == "empty"}), otherwise
+\code{stomach_empty} capped at \code{n_stomachs - 1}; \code{0} for a single fish with
+prey; \code{NA} for a pooled record with prey and no \code{stomach_empty} reported.
+}
+
+Records with no usable stomachs left (\code{n_stomachs <= 0}) are dropped. For
+single-fish records this is the same as dropping \code{regurgitated >= 1}; a
+pool of 10 with 3 regurgitated is kept with \code{n_stomachs = 7}.
+
+Pooled records stay one row each. Use \code{n_stomachs} as the denominator for
+per-fish quantities (e.g. \code{sum(weight) / sum(n_stomachs)}), or as
+\code{offset(log(n_stomachs))} in a model; see
+\code{vignette("example-workflow", package = "stomachr")}. To expand pools into
+one row per implied fish instead, follow with \code{\link[=unpool_predators]{unpool_predators()}}.
 }

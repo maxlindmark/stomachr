@@ -31,7 +31,6 @@ dat <- join_stomach_data(path) |>
     number       = dplyr::if_else(country == "NO", 1, number)
   ) |>
   add_taxonomy() |>
-  unpool_predators() |>
   drop_invalid() |>
   impute_size() |>
   trim_data() |>
@@ -114,7 +113,7 @@ plot_dat <- dat |>
   ) |>
   mutate(
     prey_group = fct_lump_n(coalesce(prey_class, "Other"), n = 5, w = prey_weight_all_ind, other_level = "Other"),
-    n_pred = n_distinct(tbl_predator_information_id), .by = predator_scientific_name
+    n_pred = sum(n_stomachs[!duplicated(tbl_predator_information_id)]), .by = predator_scientific_name
   ) |>
   summarise(
     total_weight = sum(prey_weight_all_ind),

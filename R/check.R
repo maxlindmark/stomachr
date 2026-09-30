@@ -6,6 +6,7 @@
 #' - `prey_length`: prey longer than predator
 #' - `prey_weight`: individual prey heavier than predator
 #' - `stomach_weight`: total stomach content weight exceeds predator weight
+#'   times `n_stomachs` (pooled records hold the prey of several fish)
 #' - `pred_length`: predator length <= 0 or >= 999 (sentinel value)
 #' - `count_censored`: count was the 9999 sentinel (unknown multiplicity)
 #' - `coord_outlier`: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45-72, lon -20 to 30)
@@ -17,14 +18,18 @@
 sense_check <- function(dat) {
   n_total <- nrow(dat)
 
+  n_stomachs <- if ("n_stomachs" %in% names(dat)) dat$n_stomachs else dplyr::coalesce(dat$number, 1)
+
   stomach_over <- dat |>
+    dplyr::mutate(.n_stomachs = n_stomachs) |>
     dplyr::filter(stomach_status == "food", !is.na(predator_weight)) |>
     dplyr::summarise(
       stomach_total = sum(prey_weight_all_ind, na.rm = TRUE),
       predator_weight = dplyr::first(predator_weight),
+      .n_stomachs = dplyr::first(.n_stomachs),
       .by = tbl_predator_information_id
     ) |>
-    dplyr::filter(stomach_total > predator_weight) |>
+    dplyr::filter(stomach_total > .n_stomachs * predator_weight) |>
     dplyr::pull(tbl_predator_information_id)
 
   dat <- dat |>

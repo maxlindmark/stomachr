@@ -9,7 +9,7 @@ utils::globalVariables(c(
   "tbl_prey_information_id", "aphia_id", "aphia_id_predator", "aphia_id_prey",
   "country", "survey", "year", "month", "day", "time", "lat", "lon",
   "ices_rectangle", "depth", "analysing_org",
-  "regurgitated", ".regurg_flag", "stomach_status",
+  "regurgitated", "stomach_status",
   "pred_length", "ind_wgt", "ind_weight_est", "predator_weight",
   "predator_weight_estimated", "age", "sex",
   "predator_scientific_name", "predator_class", "predator_order",
@@ -31,6 +31,6 @@ utils::globalVariables(c(
   "ice_srectangle", "shoot_lat", "shoot_long", "ident_met", "grav_method",
   "prey_sequence", "unit_wgt", "weight", "unit_lngt", "other_items",
   "other_count", "coords", "shoot_lat_imp", "shoot_long_imp",
-  "number", "count_base", "count_remainder", ".copy_idx",
-  "other_count_base", "other_count_remainder", ".n_fed"
+  "number", ".copy_idx", ".n_fed", ".n_empty", ".n", ".n_stomachs",
+  "n_empty", ".drop_flag"
 ))

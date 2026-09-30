@@ -238,6 +238,7 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
   }
 
   n_pred <- dplyr::n_distinct(dat$tbl_predator_information_id)
+  n_pooled <- sum(!is.na(pred$number) & pred$number > 1)
   n_tab <- pred |> dplyr::count(stomach_status)
   n_for_status <- function(status) {
     v <- n_tab$n[n_tab$stomach_status == status]
@@ -258,7 +259,7 @@ join_stomach_data <- function(path, impute_coords = TRUE) {
   }
 
   cli::cli_inform(c(
-    "{cli::col_cyan('join_stomach_data()')}: {fmt_n(n_pred)} {cli::qty(n_pred)}predator individual{?s}",
+    "{cli::col_cyan('join_stomach_data()')}: {fmt_n(n_pred)} predator {cli::qty(n_pred)}record{?s} ({fmt_n(n_pooled)} pooled, {.field number} > 1)",
     "v" = "{fmt_n(n_food)} ({pct_food}) with identifiable prey",
     "i" = "{fmt_n(n_empty)} ({pct_empty}) empty or regurgitated",
     "i" = "{fmt_n(n_unid)} ({pct_unid}) with prey records but no prey species ID",

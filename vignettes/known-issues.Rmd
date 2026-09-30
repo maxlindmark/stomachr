@@ -469,7 +469,7 @@ ggplot() +
 **What this means**: 
   - **Netherlands**: genuine pooling, matching the ICES description. `IndWgt` is never populated (nothing to report for a pooled group), `Regurgitated`/`StomachEmpty` scale with `Number` as real counts, and dividing prey weight by `Number` recovers a per-fish rate that matches genuine individuals.
   - **Norway**: not pooling. Each row is one individually-measured fish, indicated by `IndWgt` being populated and matching up with a single individual, `Regurgitated`/`StomachEmpty` are capped at 0/1 like any single-fish record, and dividing prey weight by `Number` makes the per-fish rate *worse*, not better. This really suggests its a data entry error. 
-- **Fix applied in the example vignettes**: `number = dplyr::if_else(country == "NO", 1, number)`. This keeps Norway's already-one-fish-per-row records untouched by `unpool_predators()`, which after this fix only ever expands genuine Netherlands pooling.
+- **Fix applied in the example vignettes**: `number = dplyr::if_else(country == "NO", 1, number)`. This keeps Norway's already-one-fish-per-row records at `n_stomachs = 1` in `drop_invalid()`, so only genuine Netherlands pooling is treated as pooled.
 
 ### 7. `PreySequence` isn't always unique within a predator
 
@@ -620,7 +620,7 @@ dup_hauls_by_country |>
 
 - `StomachEmpty`: *"Number of empty stomachs **in the sample**"*.
 - `Regurgitated`: *"Number of stomachs regurgitated"* (no "in the sample"). This is mainly a wording inconsistency.
-- Both are counts relative to `Number`, consistent with `Number`'s own "(pooled samples)" note. It's worth stating explicitly, since the convention among many analysts seems to be that `Regurgitated` is a 0/1 flag rather than a count. Could it be that countries that **do not** upload pooled stomachs treat it as a binary? It doesn't really matter if all they do is upload non-pooled stomachs. But it helps understand the columns, and make the `unpool_predators()` function in this package easier to understand (where we create pseudo-individuals and remove as many as are regurgitated).
+- Both are counts relative to `Number`, consistent with `Number`'s own "(pooled samples)" note. It's worth stating explicitly, since the convention among many analysts seems to be that `Regurgitated` is a 0/1 flag rather than a count. Could it be that countries that **do not** upload pooled stomachs treat it as a binary? It doesn't really matter if all they do is upload non-pooled stomachs. But it helps understand the columns, and it's how `drop_invalid()` uses them: `n_stomachs = Number - Regurgitated`, and `StomachEmpty` gives `n_empty`.
 
 ### 5. `SubFactor`: meaning undocumented, and never applied in this package
 

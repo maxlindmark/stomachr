@@ -2,67 +2,38 @@
 % Please edit documentation in R/unpool.R
 \name{unpool_predators}
 \alias{unpool_predators}
-\title{Resolve pooled predator records to one row per predator}
+\title{Expand pooled predator records into one row per implied fish}
 \usage{
-unpool_predators(dat, method = c("uncount", "filter"))
+unpool_predators(dat)
 }
 \arguments{
-\item{dat}{Tibble from \code{\link[=add_taxonomy]{add_taxonomy()}}. Must be called before
-\code{\link[=drop_invalid]{drop_invalid()}} and \code{\link[=impute_size]{impute_size()}} -- \code{drop_invalid()}'s
-\code{regurgitated >= 1} rule needs one-fish-per-row to mean what it says
-(see \code{regurgitated} below), and \code{impute_size()}'s weight fallbacks
-should see the per-individual view, not the pooled one.}
-
-\item{method}{One of \code{"uncount"} (default) or \code{"filter"}.
-\itemize{
-\item \code{"uncount"}: expands each pooled record (\code{Number > 1}) into \code{Number}
-rows, one per implied individual, each carrying a distinct pseudo
-\code{tbl_predator_information_id} (\code{"<original_id>_<copy>"}). \code{count} is
-apportioned across copies so the total stays an integer and sums back
-to the original (e.g. \verb{count = 7, Number = 3} -> \verb{3, 2, 2}); \code{weight}
-is recomputed from the apportioned count and the unchanged per-item
-\code{prey_weight_ind}, so it also sums back exactly to the original.
-\code{regurgitated} (also a count, DATSU: "Number of stomachs
-regurgitated") is apportioned the same way but capped at 0/1 per
-copy -- for \verb{Number = 10, Regurgitated = 3}, 3 of the 10 copies get
-\code{regurgitated = 1} and 7 get \code{0}, so a subsequent \code{drop_invalid()}
-drops exactly the right fraction instead of the whole group or none
-of it. \code{stomach_empty} (DATSU: "Number of empty stomachs in the
-sample") is also a per-pool count, but unlike \code{regurgitated} an empty
-individual gets its own no-prey copy rather than a flag on an
-existing one: \code{count}/\code{weight}/\code{other_count} are apportioned across
-\code{Number - stomach_empty} fed copies instead of \code{Number}, and
-\code{stomach_empty} further copies are added with every prey-level field
-\code{NA} and \code{stomach_status = "empty"}. Predator-level fields (\code{pred_length}, \code{predator_weight}, etc.)
-are unchanged and repeated across copies -- these are \code{Number}
-identical copies of one averaged fish, not independent observations.
-Fine for totals and for correctly weighting a pooled group's diet
-pattern by how many fish it represents; not fine if something later
-computes per-individual \emph{variance} and would treat the copies as
-independent samples.
-\item \code{"filter"}: drops every record with \code{Number > 1} outright, keeping
-only genuine single-fish records. Simpler, loses the pooled fraction
-of the data (about 2.4\% of predator records) rather than resolving it.
-}
-
-Either is defensible; doing neither is not -- pick the one that fits
-the analysis rather than treating every \code{tbl_predator_information_id}
-as one fish by default.}
+\item{dat}{Tibble from \code{\link[=drop_invalid]{drop_invalid()}}.}
 }
 \value{
-\code{dat} with one row group per predator individual, an added
-logical \code{unpooled} column (\code{TRUE} for rows created by \code{method = "uncount"}, always \code{FALSE} under \code{method = "filter"}), and \code{number}
-reset to \code{1} throughout.
+\code{dat} with pooled records expanded, \code{tbl_predator_information_id}
+as character (\code{"<id>_<copy>"} for copies), \code{number}, \code{n_stomachs} set to
+\code{1}, \code{n_empty} to \code{0}/\code{1}, \code{regurgitated} to \code{0} (unless \code{NA}), and an
+added logical \code{unpooled} column marking the copies.
 }
 \description{
-\code{Number} on a \code{PredatorInformation.csv} record can be greater than 1 --
-DATSU documents it as "Number of specimens taken for stomach analyses
-(pooled samples)". A pooled record's \code{pred_length}/\code{predator_weight}
-describe one representative fish, but the prey rows linked to that same
-\code{tbl_predator_information_id} describe the pooled group's combined diet,
-not that one fish's. Downstream code that assumes one row is one predator
-(diet-per-individual averages, \code{n_distinct(tbl_predator_information_id)}
-counts, prey-weight-to-predator-weight ratios) is silently wrong for the
-pooled fraction of the data unless this is resolved one way or another.
-See \code{vignette("known-issues", package = "stomachr")} for the evidence.
+Optional. By default the pipeline keeps pooled records (\code{n_stomachs > 1})
+as one row each, and \code{n_stomachs} can be used as a denominator or model
+offset. This function instead expands each pooled record into
+\code{n_stomachs} synthetic individuals:
+}
+\details{
+\itemize{
+\item \code{n_stomachs - n_empty} fed copies share the record's prey. \code{count} and
+\code{other_count} are split as evenly as possible (\code{7} over 3 copies ->
+\verb{3, 2, 2}); \code{weight} is \code{prey_weight_ind * count} where available,
+otherwise split evenly, as is \code{other_wgt}. Totals sum back to the
+original record.
+\item \code{n_empty} copies get no prey and \code{stomach_status = "empty"}. \code{n_empty = NA} is treated as \code{0}.
+}
+
+Predator-level fields are repeated across copies. The even split is an
+assumption, not data: totals and means are unchanged, but between-fish
+variance is understated, the number of independent observations is
+overstated, and frequency of occurrence is biased upward for the pooled
+records.
 }

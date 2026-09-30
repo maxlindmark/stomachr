@@ -84,8 +84,8 @@ The key functions of this package, which takes you from the four raw csv to some
 |---|---|
 | `join_stomach_data()` | Read and join the four CSVs; classify stomach status; impute any missing coordinates from ICES rectangle midpoints |
 | `add_taxonomy()` | Join scientific names and higher taxonomy for predators and prey (from the included WoRMS lookup) |
-| `unpool_predators()` | Resolve records where `Number > 1` (a "predator" is really a pooled group of that many fish) to one row per implied individual (`method = "uncount"`, default) or drop them (`method = "filter"`). Must run before `drop_invalid()`/`impute_size()`. Uncount distributes `count`/`weight` across `Number - stomach_empty` "copies" of predators, flags `regurgitated` of those as `regurgitated = 1` (so `drop_invalid()` drops exactly that fraction, not the whole pool), and adds `stomach_empty` further no-prey copies with `stomach_status = "empty"`. `method = "filter"` just drops every `Number > 1` record instead. Might remove this option. One of the two is required before anything that treats a row as one individual (stomach fullness, feeding rate, per-individual variance).
-| `drop_invalid()` | Remove predators with regurgitated stomach contents |
+| `drop_invalid()` | Drop regurgitated stomachs. Adds `n_stomachs` (`number - regurgitated`, the usable stomachs behind a record, which can be a pooled sample of several fish) and `n_empty` (how many of those were empty). Records with no usable stomachs left are dropped; a pool with only some regurgitated fish is kept with a smaller `n_stomachs` |
+| `unpool_predators()` | Optional. Expand pooled records (`n_stomachs > 1`) into one synthetic row per implied fish, splitting prey evenly over the fed copies and adding `n_empty` no-prey copies. Totals and means are preserved; between-fish variance and frequency of occurrence are not |
 | `impute_size()` | Estimate missing prey weight and length via L/W parameters (FishBase<sup>1</sup> for fish, Robinson et al. 2010<sup>2</sup> for invertebrates) with hierarchical taxonomic fallback; creates the final `predator_weight` column |
 | `trim_data()` | Return only the analysis-ready columns |
 | `sense_check()` | Add a `sense_flag` column marking implausible records (prey longer/heavier than predator, stomach heavier than predator, implausible predator lengths, unknown prey counts) for the user to inspect |
@@ -112,14 +112,15 @@ A full pipeline may look like this:
 
 ```r
 dat <- join_stomach_data("data/raw") |>
-  add_taxonomy()|>
-  unpool_predators() |>
+  add_taxonomy() |>
   drop_invalid() |>
   impute_size() |>
   trim_data() |>
   sense_check() |>
   drop_flagged()
 ```
+
+Pooled records (one row describing several fish) are kept as one row. Use `n_stomachs` to put them on the same scale as single-fish records, e.g. `sum(weight) / sum(n_stomachs)` for mean stomach content, or `offset(log(n_stomachs))` in a model. Add `unpool_predators()` after `drop_invalid()` if you instead need one row per fish. See `vignette("example-workflow", package = "stomachr")`.
 
 ## References
 
