@@ -105,14 +105,14 @@ Arctic drift expedition), are not used.</p>
 <span><span class="co">#&gt;   problems(dat)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,389 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
 <span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 13 duplicated (predator, PreySequence) pairs</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,694 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
 <span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
@@ -270,14 +270,15 @@ export has an equivalent field, <code>Stomach_TotalNo</code>, but it’s
 entirely unpopulated (<code>"NULL"</code> for all 361,023 rows) in this
 export, so pooling on the old side can’t be resolved the same way.
 Rather than reconstruct the new side’s true individual count (possible
-now via <code><a href="../reference/unpool_predators.html">unpool_predators()</a></code>) and leave the old side as
-record counts, this comparison deliberately stays at record/sample
-granularity on <strong>both</strong> sides, so the two numbers mean the
-same thing even though neither is a true count of physical fish.
-<code>diff</code> is <code>n_new - n_old</code>, i.e. the difference in
-how many records exist for a given year/country/region. A positive bar
-means the new database has <em>more</em> records than the old export for
-that year/country; negative means it has <em>fewer</em>.</p>
+now via <code>n_stomachs</code> from <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>) and
+leave the old side as record counts, this comparison deliberately stays
+at record/sample granularity on <strong>both</strong> sides, so the two
+numbers mean the same thing even though neither is a true count of
+physical fish. <code>diff</code> is <code>n_new - n_old</code>, i.e. the
+difference in how many records exist for a given year/country/region. A
+positive bar means the new database has <em>more</em> records than the
+old export for that year/country; negative means it has
+<em>fewer</em>.</p>
 <p>Note that the old export only covers up to 2014. Positive bars from
 2015 onwards just mean the new database has since collected data the old
 database never have had.</p>

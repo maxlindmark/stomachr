@@ -457,14 +457,14 @@ prey_dat <- lapply(regions, function(r) {
 #>   problems(dat)
 #> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
 #>   input errors. Check raw data.
-#> ℹ 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted
+#> ℹ 4,678 of 123,389 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
 #> ℹ 13 duplicated (predator, PreySequence) pairs
 #> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
 #>   input errors. Check raw data.
-#> ℹ 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted
+#> ℹ 3,095 of 10,694 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
@@ -650,9 +650,9 @@ are capped at 0/1 like any single-fish record, and dividing prey weight
 by `Number` makes the per-fish rate *worse*, not better. This really
 suggests its a data entry error. - **Fix applied in the example
 vignettes**: `number = dplyr::if_else(country == "NO", 1, number)`. This
-keeps Norway’s already-one-fish-per-row records untouched by
-[`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md),
-which after this fix only ever expands genuine Netherlands pooling.
+keeps Norway’s already-one-fish-per-row records at `n_stomachs = 1` in
+[`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md),
+so only genuine Netherlands pooling is treated as pooled.
 
 ### 7. `PreySequence` isn’t always unique within a predator
 
@@ -753,7 +753,7 @@ pred |>
 #> # A tibble: 1 × 4
 #>   n_records max_species_per_record n_pooled_records pct_pooled
 #>       <int>                  <int>            <int>      <dbl>
-#> 1    138023                      1             3343        2.4
+#> 1    138333                      1             3343        2.4
 ```
 
 ### 2. `FishID`: described as “unique”, but isn’t
@@ -773,8 +773,8 @@ cat(
   "n distinct FishID (global):", n_distinct(pred$fish_id), "\n",
   "(haul, FishID) combinations shared by >1 record:", sum(fishid_reuse$n_records_sharing_id > 1), "\n"
 )
-#> n predator records: 138023 
-#>  n distinct FishID (global): 13415 
+#> n predator records: 138333 
+#>  n distinct FishID (global): 13564 
 #>  (haul, FishID) combinations shared by >1 record: 632
 
 fishid_reuse |>
@@ -875,10 +875,10 @@ dup_hauls_by_country |>
   0/1 flag rather than a count. Could it be that countries that **do
   not** upload pooled stomachs treat it as a binary? It doesn’t really
   matter if all they do is upload non-pooled stomachs. But it helps
-  understand the columns, and make the
-  [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
-  function in this package easier to understand (where we create
-  pseudo-individuals and remove as many as are regurgitated).
+  understand the columns, and it’s how
+  [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
+  uses them: `n_stomachs = Number - Regurgitated`, and `StomachEmpty`
+  gives `n_empty`.
 
 ### 5. `SubFactor`: meaning undocumented, and never applied in this package
 
@@ -906,7 +906,7 @@ cat(
   "non-NA SubFactor:", sum(!is.na(subfactor_dat$sub_factor)), "of", nrow(subfactor_dat), "rows\n",
   "distinct non-NA values:", paste(sort(unique(subfactor_dat$sub_factor)), collapse = ", "), "\n"
 )
-#> non-NA SubFactor: 29438 of 186418 rows
+#> non-NA SubFactor: 29832 of 186968 rows
 #>  distinct non-NA values: 1
 ```
 

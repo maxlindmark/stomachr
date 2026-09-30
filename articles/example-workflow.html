@@ -172,7 +172,7 @@ affected are printed by the function.</p>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
 <span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3 duplicated (predator, PreySequence) pairs</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 8,886 predator individuals</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">join_stomach_data()</span>: 8,886 predator records (17 pooled, <span style="color: #00BB00;">number</span> &gt; 1)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> 3,845 (43.3%) with identifiable prey</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,702 (52.9%) empty or regurgitated</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 339 (3.8%) with prey records but no prey species ID</span></span>
@@ -204,54 +204,45 @@ with <code>aphia_id_prey = NA</code> in non-empty stomachs are labelled
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="step-4-unpool_predators">Step 4: <code>unpool_predators()</code><a class="anchor" aria-label="anchor" href="#step-4-unpool_predators"></a>
+<h3 id="step-4-drop_invalid">Step 4: <code>drop_invalid()</code><a class="anchor" aria-label="anchor" href="#step-4-drop_invalid"></a>
 </h3>
 <p>Some <code>PredatorInformation</code> records have
-<code>Number &gt; 1</code>: not one fish, but a pooled group of that
+<code>Number &gt; 1</code>: not one fish, but a pooled sample of that
 many (<a href="https://datsu.ices.dk/web/selRep.aspx?Dataset=157" class="external-link">file
 format documentation</a>: “Number of specimens taken for stomach
-analyses (pooled samples)”. If you want to look at prey weigths in
-stomachs, e.g. for feeding rates, it’s important that they are filtered
-or expanded, so that 1 row = 1 individual predator.</p>
+analyses (pooled samples)”). <code>Regurgitated</code> and
+<code>StomachEmpty</code> are counts out of <code>Number</code>.
+<code><a href="../reference/drop_invalid.html">drop_invalid()</a></code> resolves regurgitation per record and adds
+two columns:</p>
 <ul>
 <li>
-<code>method = "uncount"</code> (default): expands each pooled
-record into <code>Number</code> rows (one pseudo-individual per implied
-fish), distributing
-<code>count</code>/<code>weight</code>/<code>regurgitated</code>/<code>stomach_empty</code>
-so they sum back to the original totals. <code>regurgitated</code>
-(Example: <code>Number = 10, Regurgitated = 3</code>) flags 3 of the 10
-copies as <code>regurgitated = 1</code>, so <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>
-below drops exactly those 3, not all 10 or none.
-<code>stomach_empty</code> (Example:
-<code>Number = 10, StomachEmpty = 3</code>) instead gives 3 of the 10
-copies their own no-prey row (<code>stomach_status = "empty"</code>),
-with <code>count</code>/<code>weight</code> for the other 7 apportioned
-across just those 7 fed copies, not all 10. Note, these aren’t
-independent observations, so treat them accordingly for anything
-computing per-individual variance.</li>
+<code>n_stomachs = number - regurgitated</code>: the usable stomachs
+behind the record (<code>number = NA</code> is treated as
+<code>1</code>). Records with <code>n_stomachs &lt;= 0</code> are
+dropped. For a single fish that’s the same as dropping
+<code>regurgitated &gt;= 1</code>, but a pool of 10 with 3 regurgitated
+is kept with <code>n_stomachs = 7</code>, and its prey is attributed to
+those 7.</li>
 <li>
-<code>method = "filter"</code>: drops <code>Number &gt; 1</code>
-records outright instead.</li>
+<code>n_empty</code>: how many of the <code>n_stomachs</code> were
+empty. It equals <code>n_stomachs</code> when the record has no prey, is
+<code>0</code> for a single fish with prey, and otherwise comes from
+<code>StomachEmpty</code> (capped at <code>n_stomachs - 1</code>, since
+a record with prey had at least one fed fish). It is <code>NA</code> for
+a pooled record with prey but no <code>StomachEmpty</code> reported.
+<code>stomach_status</code> can’t express “3 of 10 empty” on a pooled
+record, so use <code>n_empty / n_stomachs</code> for proportions of
+empty stomachs.</li>
 </ul>
-<p>This has to run before <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>, not after –
-otherwise a partially-regurgitated pooled group gets dropped (or kept)
-as a whole before it can be resolved per implied individual.</p>
+<p>The <code>na_regurgitated</code> argument controls whether
+<code>NA</code> values are treated as not regurgitated
+(<code>"keep"</code>, default) or drop the record
+(<code>"drop"</code>).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpool_predators.html">unpool_predators</a></span><span class="op">(</span><span class="va">dat</span>, method <span class="op">=</span> <span class="st">"uncount"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="step-5-drop_invalid">Step 5: <code>drop_invalid()</code><a class="anchor" aria-label="anchor" href="#step-5-drop_invalid"></a>
-</h3>
-<p>Removes predators with <code>regurgitated &gt;= 1</code>. Stomach
-contents of regurgitated fish are not really usable. The
-<code>na_regurgitated</code> argument controls whether <code>NA</code>
-values are treated as not regurgitated (<code>"keep"</code>, default) or
-regurgitated (<code>"drop"</code>).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="va">dat</span>, na_regurgitated <span class="op">=</span> <span class="st">"keep"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">drop_invalid()</span>: 8,886 -&gt; 8,559 predators (327 dropped, 3.7%)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated value &gt;= 1 assumed regurgitated</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">drop_invalid()</span>: 8,886 -&gt; 8,559 predator records (327 dropped, 3.7%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> records dropped when every stomach is regurgitated (n_stomachs = number -</span></span>
+<span><span class="co">#&gt;   regurgitated &lt;= 0)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> regurgitated == NA assumed not regurgitated (n = 3,927 kept)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Dropped by country:</span></span>
 <span><span class="co">#&gt;   country   n percent_of_total</span></span>
@@ -261,6 +252,52 @@ regurgitated (<code>"drop"</code>).</p>
 <span><span class="co">#&gt; 4      NO  30             0.3%</span></span>
 <span><span class="co">#&gt; 5      SE 159             1.8%</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
+<div class="section level4">
+<h4 id="using-n_stomachs">Using <code>n_stomachs</code><a class="anchor" aria-label="anchor" href="#using-n_stomachs"></a>
+</h4>
+<p>Pooled records stay one row each, holding the combined prey of
+<code>n_stomachs</code> fish. Anything per fish needs
+<code>n_stomachs</code> in the denominator:</p>
+<ul>
+<li>Mean stomach content: <code>sum(weight) / sum(n_stomachs)</code>,
+not <code><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean()</a></code> over records.</li>
+<li>Counts or prey weight in a model with a log link (Poisson, negative
+binomial, Tweedie, Gamma): add <code>offset(log(n_stomachs))</code>. For
+single fish the offset is 0. For Tweedie, the dispersion of a sum of n
+fish also scales, by roughly n^(1-p), so pooled records carry slightly
+different variance.</li>
+<li>Presence/absence of a prey: a pooled record answers “did any of n
+fish eat it”, i.e. 1 - (1 - p)^n. Use a binomial model with a cloglog
+link and <code>offset(log(n_stomachs))</code>, not a logit link.</li>
+<li>Stomach fullness: the predator size on a pooled record describes one
+representative fish, so divide by
+<code>n_stomachs * predator_weight</code> (or use
+<code>offset(log(n_stomachs) + log(predator_weight))</code>).</li>
+<li>Diet composition (proportions of prey): no offset needed; a pool is
+a noisier sample of the same proportions.</li>
+</ul>
+</div>
+</div>
+<div class="section level3">
+<h3 id="step-5-optional-unpool_predators">Step 5 (optional): <code>unpool_predators()</code><a class="anchor" aria-label="anchor" href="#step-5-optional-unpool_predators"></a>
+</h3>
+<p>If you need one row per fish instead, <code><a href="../reference/unpool_predators.html">unpool_predators()</a></code>
+expands each pooled record into <code>n_stomachs</code> synthetic
+individuals: <code>n_stomachs - n_empty</code> fed copies share the
+prey, and <code>n_empty</code> copies get no prey and
+<code>stomach_status = "empty"</code>. <code>count</code> is split as
+evenly as possible (<code>count = 7</code> over 3 copies becomes
+<code>3, 2, 2</code>) and <code>weight</code> follows, so totals sum
+back to the original.</p>
+<p>That even split is an assumption, not data: the real split could have
+been <code>7, 0, 0</code>. Totals and means are unaffected, but the
+copies look far more alike than real fish do, so between-fish variance
+is understated, the number of independent observations is overstated,
+and frequency of occurrence is biased upward (<code>count = 3</code>
+over 3 fish becomes 100% occurrence, when the truth could be 33%).
+Prefer <code>n_stomachs</code> for modelling.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpool_predators.html">unpool_predators</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="step-6-impute_size">Step 6: <code>impute_size()</code><a class="anchor" aria-label="anchor" href="#step-6-impute_size"></a>

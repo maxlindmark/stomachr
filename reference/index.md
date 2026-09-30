@@ -12,9 +12,9 @@
 - [`add_taxonomy()`](https://maxlindmark.github.io/stomachr/reference/add_taxonomy.md)
   : Add WoRMS taxonomy to predator and prey
 - [`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
-  : Resolve pooled predator records to one row per predator
+  : Expand pooled predator records into one row per implied fish
 - [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
-  : Drop invalid (regurgitated) predator records
+  : Drop regurgitated stomachs and count usable stomachs per record
 - [`impute_size()`](https://maxlindmark.github.io/stomachr/reference/impute_size.md)
   : Impute missing prey and predator sizes
 - [`trim_data()`](https://maxlindmark.github.io/stomachr/reference/trim_data.md)

@@ -508,14 +508,14 @@ ratio” even with no pooling artefact at all.</p>
 <span><span class="co">#&gt;   problems(dat)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 4,678 of 123,389 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
 <span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 13 duplicated (predator, PreySequence) pairs</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are outliers in predator size compared to a W=0.01*L^3 that indicate</span></span>
 <span><span class="co">#&gt;   input errors. Check raw data.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 3,095 of 10,694 predator record flagged (|log10(observed weight / predicted</span></span>
 <span><span class="co">#&gt;   weight)| &gt; 1.5)</span></span>
 <span><span class="co">#&gt; Warning: <span style="color: #BBBB00;">!</span> There are prey records that share the same (predator, PreySequence) pair,</span></span>
 <span><span class="co">#&gt;   which should be unique. Check raw data.</span></span>
@@ -687,9 +687,9 @@ like any single-fish record, and dividing prey weight by
 This really suggests its a data entry error. - <strong>Fix applied in
 the example vignettes</strong>:
 <code>number = dplyr::if_else(country == "NO", 1, number)</code>. This
-keeps Norway’s already-one-fish-per-row records untouched by
-<code><a href="../reference/unpool_predators.html">unpool_predators()</a></code>, which after this fix only ever expands
-genuine Netherlands pooling.</p>
+keeps Norway’s already-one-fish-per-row records at
+<code>n_stomachs = 1</code> in <code><a href="../reference/drop_invalid.html">drop_invalid()</a></code>, so only
+genuine Netherlands pooling is treated as pooled.</p>
 </div>
 </div>
 <div class="section level3">
@@ -802,7 +802,7 @@ there’s nothing for “number of species” to count within one record.</li>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   n_records max_species_per_record n_pooled_records pct_pooled</span></span>
 <span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    <span style="text-decoration: underline;">138</span>023                      1             <span style="text-decoration: underline;">3</span>343        2.4</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    <span style="text-decoration: underline;">138</span>333                      1             <span style="text-decoration: underline;">3</span>343        2.4</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="fishid-described-as-unique-but-isnt">2. <code>FishID</code>: described as “unique”, but isn’t<a class="anchor" aria-label="anchor" href="#fishid-described-as-unique-but-isnt"></a>
@@ -825,8 +825,8 @@ unique haul.</li>
 <span>  <span class="st">"n distinct FishID (global):"</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/n_distinct.html" class="external-link">n_distinct</a></span><span class="op">(</span><span class="va">pred</span><span class="op">$</span><span class="va">fish_id</span><span class="op">)</span>, <span class="st">"\n"</span>,</span>
 <span>  <span class="st">"(haul, FishID) combinations shared by &gt;1 record:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">fishid_reuse</span><span class="op">$</span><span class="va">n_records_sharing_id</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span>, <span class="st">"\n"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; n predator records: 138023 </span></span>
-<span><span class="co">#&gt;  n distinct FishID (global): 13415 </span></span>
+<span><span class="co">#&gt; n predator records: 138333 </span></span>
+<span><span class="co">#&gt;  n distinct FishID (global): 13564 </span></span>
 <span><span class="co">#&gt;  (haul, FishID) combinations shared by &gt;1 record: 632</span></span>
 <span></span>
 <span><span class="va">fishid_reuse</span> <span class="op">|&gt;</span></span>
@@ -944,10 +944,10 @@ explicitly, since the convention among many analysts seems to be that
 <code>Regurgitated</code> is a 0/1 flag rather than a count. Could it be
 that countries that <strong>do not</strong> upload pooled stomachs treat
 it as a binary? It doesn’t really matter if all they do is upload
-non-pooled stomachs. But it helps understand the columns, and make the
-<code><a href="../reference/unpool_predators.html">unpool_predators()</a></code> function in this package easier to
-understand (where we create pseudo-individuals and remove as many as are
-regurgitated).</li>
+non-pooled stomachs. But it helps understand the columns, and it’s how
+<code><a href="../reference/drop_invalid.html">drop_invalid()</a></code> uses them:
+<code>n_stomachs = Number - Regurgitated</code>, and
+<code>StomachEmpty</code> gives <code>n_empty</code>.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -977,7 +977,7 @@ through unchanged; nothing multiplies
 <span>  <span class="st">"non-NA SubFactor:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">subfactor_dat</span><span class="op">$</span><span class="va">sub_factor</span><span class="op">)</span><span class="op">)</span>, <span class="st">"of"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">subfactor_dat</span><span class="op">)</span>, <span class="st">"rows\n"</span>,</span>
 <span>  <span class="st">"distinct non-NA values:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">subfactor_dat</span><span class="op">$</span><span class="va">sub_factor</span><span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; non-NA SubFactor: 29438 of 186418 rows</span></span>
+<span><span class="co">#&gt; non-NA SubFactor: 29832 of 186968 rows</span></span>
 <span><span class="co">#&gt;  distinct non-NA values: 1</span></span></code></pre></div>
 <ul>
 <li>Every populated value seen so far is exactly <code>1</code>, so for

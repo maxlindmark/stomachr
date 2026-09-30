@@ -68,7 +68,8 @@ rows that fail any of the following checks:</p>
 
 <ul><li><p><code>prey_length</code>: prey longer than predator</p></li>
 <li><p><code>prey_weight</code>: individual prey heavier than predator</p></li>
-<li><p><code>stomach_weight</code>: total stomach content weight exceeds predator weight</p></li>
+<li><p><code>stomach_weight</code>: total stomach content weight exceeds predator weight
+times <code>n_stomachs</code> (pooled records hold the prey of several fish)</p></li>
 <li><p><code>pred_length</code>: predator length &lt;= 0 or &gt;= 999 (sentinel value)</p></li>
 <li><p><code>count_censored</code>: count was the 9999 sentinel (unknown multiplicity)</p></li>
 <li><p><code>coord_outlier</code>: lat/lon outside plausible bounds covering the North Sea, Baltic, and Celtic Sea region (lat 45-72, lon -20 to 30)</p></li>

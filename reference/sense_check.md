@@ -27,6 +27,7 @@ sense_check(dat)
 - `prey_weight`: individual prey heavier than predator
 
 - `stomach_weight`: total stomach content weight exceeds predator weight
+  times `n_stomachs` (pooled records hold the prey of several fish)
 
 - `pred_length`: predator length \<= 0 or \>= 999 (sentinel value)
 

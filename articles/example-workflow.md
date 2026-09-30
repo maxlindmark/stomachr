@@ -110,7 +110,7 @@ dat <- join_stomach_data(path)
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
 #> ℹ 3 duplicated (predator, PreySequence) pairs
-#> join_stomach_data(): 8,886 predator individuals
+#> join_stomach_data(): 8,886 predator records (17 pooled, number > 1)
 #> ✔ 3,845 (43.3%) with identifiable prey
 #> ℹ 4,702 (52.9%) empty or regurgitated
 #> ℹ 339 (3.8%) with prey records but no prey species ID
@@ -144,53 +144,39 @@ dat <- add_taxonomy(dat)
 #> 
 ```
 
-### Step 4: `unpool_predators()`
+### Step 4: `drop_invalid()`
 
 Some `PredatorInformation` records have `Number > 1`: not one fish, but
-a pooled group of that many ([file format
+a pooled sample of that many ([file format
 documentation](https://datsu.ices.dk/web/selRep.aspx?Dataset=157):
-“Number of specimens taken for stomach analyses (pooled samples)”. If
-you want to look at prey weigths in stomachs, e.g. for feeding rates,
-it’s important that they are filtered or expanded, so that 1 row = 1
-individual predator.
+“Number of specimens taken for stomach analyses (pooled samples)”).
+`Regurgitated` and `StomachEmpty` are counts out of `Number`.
+[`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
+resolves regurgitation per record and adds two columns:
 
-- `method = "uncount"` (default): expands each pooled record into
-  `Number` rows (one pseudo-individual per implied fish), distributing
-  `count`/`weight`/`regurgitated`/`stomach_empty` so they sum back to
-  the original totals. `regurgitated` (Example:
-  `Number = 10, Regurgitated = 3`) flags 3 of the 10 copies as
-  `regurgitated = 1`, so
-  [`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md)
-  below drops exactly those 3, not all 10 or none. `stomach_empty`
-  (Example: `Number = 10, StomachEmpty = 3`) instead gives 3 of the 10
-  copies their own no-prey row (`stomach_status = "empty"`), with
-  `count`/`weight` for the other 7 apportioned across just those 7 fed
-  copies, not all 10. Note, these aren’t independent observations, so
-  treat them accordingly for anything computing per-individual variance.
-- `method = "filter"`: drops `Number > 1` records outright instead.
+- `n_stomachs = number - regurgitated`: the usable stomachs behind the
+  record (`number = NA` is treated as `1`). Records with
+  `n_stomachs <= 0` are dropped. For a single fish that’s the same as
+  dropping `regurgitated >= 1`, but a pool of 10 with 3 regurgitated is
+  kept with `n_stomachs = 7`, and its prey is attributed to those 7.
+- `n_empty`: how many of the `n_stomachs` were empty. It equals
+  `n_stomachs` when the record has no prey, is `0` for a single fish
+  with prey, and otherwise comes from `StomachEmpty` (capped at
+  `n_stomachs - 1`, since a record with prey had at least one fed fish).
+  It is `NA` for a pooled record with prey but no `StomachEmpty`
+  reported. `stomach_status` can’t express “3 of 10 empty” on a pooled
+  record, so use `n_empty / n_stomachs` for proportions of empty
+  stomachs.
 
-This has to run before
-[`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md),
-not after – otherwise a partially-regurgitated pooled group gets dropped
-(or kept) as a whole before it can be resolved per implied individual.
-
-``` r
-
-dat <- unpool_predators(dat, method = "uncount")
-```
-
-### Step 5: `drop_invalid()`
-
-Removes predators with `regurgitated >= 1`. Stomach contents of
-regurgitated fish are not really usable. The `na_regurgitated` argument
-controls whether `NA` values are treated as not regurgitated (`"keep"`,
-default) or regurgitated (`"drop"`).
+The `na_regurgitated` argument controls whether `NA` values are treated
+as not regurgitated (`"keep"`, default) or drop the record (`"drop"`).
 
 ``` r
 
 dat <- drop_invalid(dat, na_regurgitated = "keep")
-#> drop_invalid(): 8,886 -> 8,559 predators (327 dropped, 3.7%)
-#> ℹ regurgitated value >= 1 assumed regurgitated
+#> drop_invalid(): 8,886 -> 8,559 predator records (327 dropped, 3.7%)
+#> ℹ records dropped when every stomach is regurgitated (n_stomachs = number -
+#>   regurgitated <= 0)
 #> ℹ regurgitated == NA assumed not regurgitated (n = 3,927 kept)
 #> ℹ Dropped by country:
 #>   country   n percent_of_total
@@ -200,6 +186,51 @@ dat <- drop_invalid(dat, na_regurgitated = "keep")
 #> 4      NO  30             0.3%
 #> 5      SE 159             1.8%
 #> 
+```
+
+#### Using `n_stomachs`
+
+Pooled records stay one row each, holding the combined prey of
+`n_stomachs` fish. Anything per fish needs `n_stomachs` in the
+denominator:
+
+- Mean stomach content: `sum(weight) / sum(n_stomachs)`, not
+  [`mean()`](https://rdrr.io/r/base/mean.html) over records.
+- Counts or prey weight in a model with a log link (Poisson, negative
+  binomial, Tweedie, Gamma): add `offset(log(n_stomachs))`. For single
+  fish the offset is 0. For Tweedie, the dispersion of a sum of n fish
+  also scales, by roughly n^(1-p), so pooled records carry slightly
+  different variance.
+- Presence/absence of a prey: a pooled record answers “did any of n fish
+  eat it”, i.e. 1 - (1 - p)^n. Use a binomial model with a cloglog link
+  and `offset(log(n_stomachs))`, not a logit link.
+- Stomach fullness: the predator size on a pooled record describes one
+  representative fish, so divide by `n_stomachs * predator_weight` (or
+  use `offset(log(n_stomachs) + log(predator_weight))`).
+- Diet composition (proportions of prey): no offset needed; a pool is a
+  noisier sample of the same proportions.
+
+### Step 5 (optional): `unpool_predators()`
+
+If you need one row per fish instead,
+[`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md)
+expands each pooled record into `n_stomachs` synthetic individuals:
+`n_stomachs - n_empty` fed copies share the prey, and `n_empty` copies
+get no prey and `stomach_status = "empty"`. `count` is split as evenly
+as possible (`count = 7` over 3 copies becomes `3, 2, 2`) and `weight`
+follows, so totals sum back to the original.
+
+That even split is an assumption, not data: the real split could have
+been `7, 0, 0`. Totals and means are unaffected, but the copies look far
+more alike than real fish do, so between-fish variance is understated,
+the number of independent observations is overstated, and frequency of
+occurrence is biased upward (`count = 3` over 3 fish becomes 100%
+occurrence, when the truth could be 33%). Prefer `n_stomachs` for
+modelling.
+
+``` r
+
+dat <- unpool_predators(dat)
 ```
 
 ### Step 6: `impute_size()`

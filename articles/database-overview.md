@@ -36,14 +36,14 @@ dat <- lapply(regions, function(r) {
 #>   problems(dat)
 #> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
 #>   input errors. Check raw data.
-#> ℹ 4,678 of 123,407 predator record flagged (|log10(observed weight / predicted
+#> ℹ 4,678 of 123,389 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
 #> ℹ 13 duplicated (predator, PreySequence) pairs
 #> Warning: ! There are outliers in predator size compared to a W=0.01*L^3 that indicate
 #>   input errors. Check raw data.
-#> ℹ 3,095 of 10,366 predator record flagged (|log10(observed weight / predicted
+#> ℹ 3,095 of 10,694 predator record flagged (|log10(observed weight / predicted
 #>   weight)| > 1.5)
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
@@ -211,7 +211,8 @@ The old export has an equivalent field, `Stomach_TotalNo`, but it’s
 entirely unpopulated (`"NULL"` for all 361,023 rows) in this export, so
 pooling on the old side can’t be resolved the same way. Rather than
 reconstruct the new side’s true individual count (possible now via
-[`unpool_predators()`](https://maxlindmark.github.io/stomachr/reference/unpool_predators.md))
+`n_stomachs` from
+[`drop_invalid()`](https://maxlindmark.github.io/stomachr/reference/drop_invalid.md))
 and leave the old side as record counts, this comparison deliberately
 stays at record/sample granularity on **both** sides, so the two numbers
 mean the same thing even though neither is a true count of physical

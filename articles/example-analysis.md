@@ -22,7 +22,6 @@ dat <- join_stomach_data(path) |>
     number       = dplyr::if_else(country == "NO", 1, number)
   ) |>
   add_taxonomy() |>
-  unpool_predators() |>
   drop_invalid() |>
   impute_size() |>
   trim_data() |>
@@ -35,7 +34,7 @@ dat <- join_stomach_data(path) |>
 #> Warning: ! There are prey records that share the same (predator, PreySequence) pair,
 #>   which should be unique. Check raw data.
 #> ℹ 3 duplicated (predator, PreySequence) pairs
-#> join_stomach_data(): 8,886 predator individuals
+#> join_stomach_data(): 8,886 predator records (17 pooled, number > 1)
 #> ✔ 3,845 (43.3%) with identifiable prey
 #> ℹ 4,702 (52.9%) empty or regurgitated
 #> ℹ 339 (3.8%) with prey records but no prey species ID
@@ -47,8 +46,9 @@ dat <- join_stomach_data(path) |>
 #> ✔ Predator AphiaIDs: 23 unique, 0 unresolved
 #> ✔ Prey AphiaIDs: 254 unique, 0 unresolved
 #>   
-#> drop_invalid(): 8,886 -> 8,559 predators (327 dropped, 3.7%)
-#> ℹ regurgitated value >= 1 assumed regurgitated
+#> drop_invalid(): 8,886 -> 8,559 predator records (327 dropped, 3.7%)
+#> ℹ records dropped when every stomach is regurgitated (n_stomachs = number -
+#>   regurgitated <= 0)
 #> ℹ regurgitated == NA assumed not regurgitated (n = 3,927 kept)
 #> ℹ Dropped by country:
 #>   country   n percent_of_total
@@ -184,7 +184,7 @@ plot_dat <- dat |>
   ) |>
   mutate(
     prey_group = fct_lump_n(coalesce(prey_class, "Other"), n = 5, w = prey_weight_all_ind, other_level = "Other"),
-    n_pred = n_distinct(tbl_predator_information_id), .by = predator_scientific_name
+    n_pred = sum(n_stomachs[!duplicated(tbl_predator_information_id)]), .by = predator_scientific_name
   ) |>
   summarise(
     total_weight = sum(prey_weight_all_ind),

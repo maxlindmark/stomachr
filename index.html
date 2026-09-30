@@ -182,12 +182,13 @@
 <td>Join scientific names and higher taxonomy for predators and prey (from the included WoRMS lookup)</td>
 </tr>
 <tr>
-<td><code><a href="reference/unpool_predators.html">unpool_predators()</a></code></td>
-<td>Resolve records where <code>Number &gt; 1</code> (a “predator” is really a pooled group of that many fish) to one row per implied individual (<code>method = "uncount"</code>, default) or drop them (<code>method = "filter"</code>). Must run before <code><a href="reference/drop_invalid.html">drop_invalid()</a></code>/<code><a href="reference/impute_size.html">impute_size()</a></code>. Uncount distributes <code>count</code>/<code>weight</code> across <code>Number - stomach_empty</code> “copies” of predators, flags <code>regurgitated</code> of those as <code>regurgitated = 1</code> (so <code><a href="reference/drop_invalid.html">drop_invalid()</a></code> drops exactly that fraction, not the whole pool), and adds <code>stomach_empty</code> further no-prey copies with <code>stomach_status = "empty"</code>. <code>method = "filter"</code> just drops every <code>Number &gt; 1</code> record instead. Might remove this option. One of the two is required before anything that treats a row as one individual (stomach fullness, feeding rate, per-individual variance).</td>
+<td><code><a href="reference/drop_invalid.html">drop_invalid()</a></code></td>
+<td>Drop regurgitated stomachs. Adds <code>n_stomachs</code> (<code>number - regurgitated</code>, the usable stomachs behind a record, which can be a pooled sample of several fish) and <code>n_empty</code> (how many of those were empty). Records with no usable stomachs left are dropped; a pool with only some regurgitated fish is kept with a smaller <code>n_stomachs</code>
+</td>
 </tr>
 <tr>
-<td><code><a href="reference/drop_invalid.html">drop_invalid()</a></code></td>
-<td>Remove predators with regurgitated stomach contents</td>
+<td><code><a href="reference/unpool_predators.html">unpool_predators()</a></code></td>
+<td>Optional. Expand pooled records (<code>n_stomachs &gt; 1</code>) into one synthetic row per implied fish, splitting prey evenly over the fed copies and adding <code>n_empty</code> no-prey copies. Totals and means are preserved; between-fish variance and frequency of occurrence are not</td>
 </tr>
 <tr>
 <td><code><a href="reference/impute_size.html">impute_size()</a></code></td>
@@ -258,13 +259,13 @@
 <p>A full pipeline may look like this:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/join_stomach_data.html">join_stomach_data</a></span><span class="op">(</span><span class="st">"data/raw"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="op">)</span><span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="reference/unpool_predators.html">unpool_predators</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/add_taxonomy.html">add_taxonomy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/drop_invalid.html">drop_invalid</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/impute_size.html">impute_size</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/trim_data.html">trim_data</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sense_check.html">sense_check</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/drop_flagged.html">drop_flagged</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Pooled records (one row describing several fish) are kept as one row. Use <code>n_stomachs</code> to put them on the same scale as single-fish records, e.g. <code>sum(weight) / sum(n_stomachs)</code> for mean stomach content, or <code>offset(log(n_stomachs))</code> in a model. Add <code><a href="reference/unpool_predators.html">unpool_predators()</a></code> after <code><a href="reference/drop_invalid.html">drop_invalid()</a></code> if you instead need one row per fish. See <code><a href="articles/example-workflow.html">vignette("example-workflow", package = "stomachr")</a></code>.</p>
 </div>
 </div>
 <div class="section level2">
